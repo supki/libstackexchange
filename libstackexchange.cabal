@@ -12,6 +12,9 @@ cabal-version: >= 1.8
 
 library
   build-depends: base >= 4.6,
-                 bytestring >= 0.10
+                 bytestring >= 0.10,
+                 aeson,
+                 attoparsec,
+                 http-conduit
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
