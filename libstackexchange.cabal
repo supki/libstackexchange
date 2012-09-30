@@ -1,0 +1,17 @@
+name:          libstackexchange
+version:       0.1.0.0
+synopsis:      Wrapper to stackexchange sites' API
+homepage:      https://github.com/supki/libstackexchange
+license:       MIT
+license-file:  LICENSE
+author:        Matvey Aksenov
+maintainer:    matvey.aksenov@gmail.com
+category:      NetworkAPIs
+build-type:    Simple
+cabal-version: >= 1.8
+
+library
+  build-depends: base >= 4.6,
+                 bytestring >= 0.10
+  hs-source-dirs: src
+  exposed-modules: Network.StackExchange
