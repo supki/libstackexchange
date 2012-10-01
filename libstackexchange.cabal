@@ -13,8 +13,13 @@ cabal-version: >= 1.8
 library
   build-depends: base >= 4.6,
                  bytestring >= 0.10,
-                 aeson,
                  attoparsec,
-                 http-conduit
+                 text,
+                 aeson,
+                 http-conduit,
+                 lens
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
+                   Network.StackExchange.URI
+  ghc-options: -Wall
+               -fno-warn-unused-do-bind

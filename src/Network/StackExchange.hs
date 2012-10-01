@@ -9,14 +9,18 @@ module Network.StackExchange where
 
 import Control.Applicative ((<$>), empty)
 import Control.Exception (Exception, throwIO)
-import Data.List (intercalate)
 import Data.Typeable (Typeable)
 
+import           Data.Monoid.Lens ((<>~))
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.Attoparsec.Lazy as AP
-import qualified Data.ByteString.Lazy as B
-import           Network.HTTP.Conduit
+import           Data.Text.Lazy (intercalate)
+import           Data.Text.Lazy.Builder (toLazyText)
+import           Data.Text.Lazy.Builder.Int (decimal)
+import           Network.HTTP.Conduit (simpleHttp)
+
+import Network.StackExchange.URI
 
 
 data Object =
@@ -57,7 +61,7 @@ data Object =
   | WritePermission
 
 
-data SE (a ∷ Object) = SE A.Value deriving Show
+newtype SE (a ∷ Object) = SE A.Value deriving Show
 
 
 newtype SEException = SEException String
@@ -68,20 +72,17 @@ instance Exception SEException
 
 
 users'ids'answers ∷ [Int] → IO [SE Answer]
-users'ids'answers (intercalate ";" . map show → ids) =
-  AP.parse A.json <$> simpleHttp
-    (stackexchange ++ "users/" ++ ids ++ "/answers?order=desc&sort=activity&site=stackoverflow") >>= \case
+users'ids'answers (intercalate ";" . map (toLazyText . decimal) → ids) = do
+  let path = uriPath <>~ ["users", ids, "answers"]
+      query = uriQuery <>~ [("order","desc"),("sort","activity"),("site","stackoverflow")]
+  AP.parse A.json <$> (simpleHttp . render . query . path $ stackexchange) >>= \case
     AP.Done _ s → case A.parse p s of
       A.Success v → return $ map SE v
-      _ → throwSE ".users/{ids}/answers: Incorrect JSON, cannot as a list of answers"
+      _ → throwSE ".users/{ids}/answers: Incorrect JSON, cannot parse as a list of answers"
     _ → throwSE ".users/{ids}/answers: Malformed JSON, cannot parse"
  where
   p (A.Object o) = o A..: "items"
   p _ = empty
-
-
-stackexchange ∷ String
-stackexchange = "https://api.stackexchange.com/2.1/"
 
 
 throwSE ∷ String → IO a
