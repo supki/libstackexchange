@@ -20,9 +20,10 @@ library
                  http-conduit,
                  lens >= 3.0.2
   hs-source-dirs: src
-  exposed-modules: Control.Monad.StackExchange
-                   Network.StackExchange
+  exposed-modules: Network.StackExchange
+                   Network.StackExchange.API
                    Network.StackExchange.URI
                    Network.StackExchange.Types
+                   Control.Monad.StackExchange
   ghc-options: -Wall
                -fno-warn-unused-do-bind
