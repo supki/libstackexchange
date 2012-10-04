@@ -13,13 +13,16 @@ cabal-version: >= 1.8
 library
   build-depends: base >= 4.6,
                  bytestring >= 0.10,
+                 mtl,
                  attoparsec,
                  text,
                  aeson,
                  http-conduit,
-                 lens
+                 lens >= 3.0.2
   hs-source-dirs: src
-  exposed-modules: Network.StackExchange
+  exposed-modules: Control.Monad.StackExchange
+                   Network.StackExchange
                    Network.StackExchange.URI
+                   Network.StackExchange.Types
   ghc-options: -Wall
                -fno-warn-unused-do-bind

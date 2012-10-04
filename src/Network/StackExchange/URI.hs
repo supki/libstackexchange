@@ -18,9 +18,9 @@ module Network.StackExchange.URI
 import Data.Foldable (foldMap)
 import Data.Monoid ((<>), mconcat)
 
+import           Control.Lens
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import           Control.Lens
 
 
 -- | Main URI data type
@@ -31,24 +31,22 @@ data URI = URI
   }
 
 
-makeLenses ''URI
+makeLensesWith (lensRules % generateSignatures .~ False) ''URI
 
 
-{- Waiting for Edward Kmett to give us an option to generate lenses without type signatures
- -
- --- | StackExchange API host name lens
- -uriHost ∷ Lens URI URI String String
- -
- -
- --- | StackExchange API method as URI path lens
- -uriPath ∷ Lens URI URI [String] [String]
- -
- -
- --- | StackExchange API method parameters lens
- -uriQuery ∷ Lens URI URI [(String, String)] [(String, String)]
- -}
+-- | StackExchange API host name lens
+uriHost ∷ Lens URI URI Text Text
 
 
+-- | StackExchange API method as URI path lens
+uriPath ∷ Lens URI URI [Text] [Text]
+
+
+-- | StackExchange API method parameters lens
+uriQuery ∷ Lens URI URI [(Text, Text)] [(Text, Text)]
+
+
+-- | default StackExchange API server URI
 stackexchange ∷ URI
 stackexchange = URI
   { _uriHost = "https://api.stackexchange.com"
