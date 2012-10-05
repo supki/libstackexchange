@@ -9,7 +9,6 @@ module Network.StackExchange.API
   ) where
 
 import Control.Applicative (empty)
-import Control.Exception (throwIO)
 import Control.Monad (liftM)
 
 import           Control.Monad.State (MonadState, get, put)
@@ -37,8 +36,8 @@ users'ids'answers (intercalate ";" . map (toLazyText . decimal) → ids) = local
   AP.parse A.json `liftM` request >>= \case
     AP.Done _ s → case A.parse p s of
       A.Success v → return $ map SE v
-      _ → throwSE ".users/{ids}/answers: Incorrect JSON, cannot parse as a list of answers"
-    _ → throwSE ".users/{ids}/answers: Malformed JSON, cannot parse"
+      _ → fail ".users/{ids}/answers: Incorrect JSON, cannot parse as a list of answers"
+    _ → fail ".users/{ids}/answers: Malformed JSON, cannot parse"
  where
   p (A.Object o) = o A..: "items"
   p _ = empty
@@ -51,7 +50,7 @@ filter'create (intercalate ";" → include) (intercalate ";" → exclude) base =
   uriQuery <>= [("include",include),("exclude",exclude),("base",base)]
   AP.parse A.json `liftM` request >>= \case
     AP.Done _ s → return $ SE s
-    _ → throwSE ".filter/create: Malformed JSON, cannot parse"
+    _ → fail ".filter/create: Malformed JSON, cannot parse"
 
 
 localState ∷ MonadState s m ⇒ m a → m a
@@ -62,11 +61,6 @@ localState m = get >>= \s → m >>= \v → put s >> return v
 request ∷ MonadIO m ⇒ StackExchangeT m ByteString
 request = get >>= io . simpleHttp . render
 {-# INLINE request #-}
-
-
-throwSE ∷ MonadIO m ⇒ String → m a
-throwSE = io . throwIO . SEException . ("libstackexchange" ++)
-{-# INLINE throwSE #-}
 
 
 io ∷ MonadIO m ⇒ IO a → m a

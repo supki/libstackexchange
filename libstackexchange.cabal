@@ -25,5 +25,6 @@ library
                    Network.StackExchange.URI
                    Network.StackExchange.Types
                    Control.Monad.StackExchange
+                   Data.Aeson.Lens
   ghc-options: -Wall
                -fno-warn-unused-do-bind

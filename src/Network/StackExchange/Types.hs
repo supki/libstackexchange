@@ -1,13 +1,10 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE UnicodeSyntax #-}
 module Network.StackExchange.Types where
 
-import Control.Exception (Exception)
-import Data.Typeable (Typeable)
 
-import qualified Data.Aeson.Types as A
+import Data.Aeson.Types (Value)
 
 
 data Object =
@@ -48,11 +45,4 @@ data Object =
   | WritePermission
 
 
-newtype SE (a ∷ Object) = SE A.Value deriving Show
-
-
-newtype SEException = SEException String
-  deriving (Show, Typeable)
-
-
-instance Exception SEException
+newtype SE (a ∷ Object) = SE Value deriving Show
