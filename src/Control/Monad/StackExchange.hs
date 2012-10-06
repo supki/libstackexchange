@@ -25,8 +25,10 @@ import Network.StackExchange.URI
 
 
 -- | Encapsulates all libstackexchange functions
-newtype StackExchangeT m a = StackExchangeT
-  { runStackExchangeT ∷ ErrorT SEError (StateT URI m) a } deriving
+--
+-- Phantom type @a@ represents authentification mode
+newtype StackExchangeT a m α = StackExchangeT
+  { runStackExchangeT ∷ ErrorT SEError (StateT URI m) α } deriving
     ( Functor, Applicative, Alternative, Monad, MonadPlus
     , MonadIO
     , MonadState URI
@@ -34,21 +36,21 @@ newtype StackExchangeT m a = StackExchangeT
     )
 
 
-instance MonadTrans StackExchangeT where
-  lift ∷ Monad m ⇒ m a → StackExchangeT m a
+instance MonadTrans (StackExchangeT a) where
+  lift ∷ Monad m ⇒ m α → StackExchangeT a m α
   lift m = StackExchangeT . ErrorT $ do
     a ← StateT $ \s → m >>= \a → return (a, s)
     return (Right a)
 
 
 -- | Convenient type alias since vast majority of users won't need anything except IO
-type StackExchange = StackExchangeT IO
+type StackExchange a = StackExchangeT a IO
 
 
 -- | Run a bunch of libstackexchange functions
-runStackExchange ∷ Monad m ⇒ StackExchangeT m a → m (Either SEError a)
+runStackExchange ∷ Monad m ⇒ StackExchangeT a m α → m (Either SEError α)
 runStackExchange = (\v → evalStateT v stackexchange) . runErrorT . runStackExchangeT
-{-# SPECIALIZE runStackExchange ∷ StackExchangeT IO a → IO (Either SEError a) #-}
+{-# SPECIALIZE runStackExchange ∷ StackExchangeT a IO α → IO (Either SEError α) #-}
 
 
 -- | StackExchange API errors
