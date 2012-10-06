@@ -5,6 +5,7 @@ module Network.StackExchange
 
 import Control.Monad.StackExchange as S
 import Data.Aeson.Lens as S
-import Network.StackExchange.API as S
+import Network.StackExchange.API.Answer as S
+import Network.StackExchange.API.Filter as S
 import Network.StackExchange.URI as S
 import Network.StackExchange.Types as S

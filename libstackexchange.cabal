@@ -22,6 +22,8 @@ library
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
                    Network.StackExchange.API
+                   Network.StackExchange.API.Answer
+                   Network.StackExchange.API.Filter
                    Network.StackExchange.URI
                    Network.StackExchange.Types
                    Control.Monad.StackExchange
