@@ -12,7 +12,7 @@ cabal-version: >= 1.8
 
 library
   build-depends: base >= 4.6,
-                 bytestring >= 0.10,
+                 bytestring,
                  mtl,
                  attoparsec,
                  text,
@@ -26,5 +26,22 @@ library
                    Network.StackExchange.Types
                    Control.Monad.StackExchange
                    Data.Aeson.Lens
+  ghc-options: -Wall
+               -fno-warn-unused-do-bind
+
+test-suite aeson-lens
+  build-depends: base >= 4.6,
+                 template-haskell,
+                 bytestring,
+                 mtl,
+                 attoparsec,
+                 aeson,
+                 lens,
+                 HUnit,
+                 libstackexchange
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: tests/aeson-lens
+  other-modules: TH
   ghc-options: -Wall
                -fno-warn-unused-do-bind
