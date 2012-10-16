@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- | Some lenses for convenient JSON parsing
@@ -9,15 +10,23 @@ module Network.StackExchange.JSON
     aeson
     -- * Convenience functions
   , field, fields
+    -- * Parse StackExchange JSON
+  , attoparsec, items
   ) where
 
 import Control.Category ((>>>))
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), liftM)
 
+import           Data.ByteString.Lazy (ByteString)
 import           Control.Lens
 import           Data.Aeson (FromJSON, Value, (.:), parseJSON)
 import qualified Data.Aeson.Types as A
+import qualified Data.Aeson as A
+import qualified Data.Attoparsec.Lazy as AP
 import           Data.Text (Text)
+
+import Network.StackExchange.Types
+import Control.Monad.StackExchange (StackExchangeT)
 
 
 -- | Generalized combinator, useful if user wants full power of Aeson
@@ -38,3 +47,15 @@ field xs = aeson $ (.: xs) <=< parseJSON
 fields ∷ (Monad m, FromJSON a) ⇒ Text → Action m Value [a]
 fields xs = aeson $ mapM (.: xs) <=< parseJSON
 {-# INLINE fields #-}
+
+
+-- |
+attoparsec ∷ Monad m ⇒ (Value → StackExchangeT a m b) → String → ByteString → StackExchangeT a m b
+attoparsec f msg request = case AP.parse A.json request of
+  AP.Done _ s → f s
+  _           → fail $ msg ++ "Malformed JSON, cannot parse"
+
+
+
+items ∷ Monad m ⇒ Value → m [SE a]
+items s = map SE `liftM` (s ^! field "items")
