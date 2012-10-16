@@ -26,8 +26,8 @@ import           Data.Text.Lazy.Builder (toLazyText)
 import           Data.Text.Lazy.Builder.Int (decimal)
 
 import Control.Monad.StackExchange (StackExchangeT)
-import Data.Aeson.Lens (field)
 import Network.StackExchange.API (localState, request)
+import Network.StackExchange.JSON (field)
 import Network.StackExchange.URI
 import Network.StackExchange.Types
 

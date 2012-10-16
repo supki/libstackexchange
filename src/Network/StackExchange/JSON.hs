@@ -4,7 +4,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE UnicodeSyntax #-}
 -- | Some lenses for convenient JSON parsing
-module Data.Aeson.Lens
+module Network.StackExchange.JSON
   ( -- * Generalized combinators
     aeson
     -- * Convenience functions

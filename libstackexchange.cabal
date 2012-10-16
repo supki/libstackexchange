@@ -26,8 +26,8 @@ library
                    Network.StackExchange.API.Filter
                    Network.StackExchange.URI
                    Network.StackExchange.Types
+                   Network.StackExchange.JSON
                    Control.Monad.StackExchange
-                   Data.Aeson.Lens
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 

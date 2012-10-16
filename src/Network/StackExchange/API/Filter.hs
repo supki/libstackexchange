@@ -25,8 +25,8 @@ import           Data.Monoid.Lens ((<>=))
 import           Data.Text.Lazy (Text, intercalate)
 
 import Control.Monad.StackExchange (StackExchangeT)
-import Data.Aeson.Lens
 import Network.StackExchange.API
+import Network.StackExchange.JSON
 import Network.StackExchange.URI
 import Network.StackExchange.Types
 
