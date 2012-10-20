@@ -21,7 +21,7 @@ main ∷ IO ()
 main = do
   let AP.Done _ parsed = AP.parse A.json json
   Counts { errors, failures } ← runTestTT (tests parsed)
-  if errors + failures > 0 then exitFailure else exitSuccess
+  if errors + failures == 0 then exitSuccess else exitFailure
 
 
 json ∷ ByteString
