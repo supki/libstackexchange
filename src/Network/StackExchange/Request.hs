@@ -26,17 +26,27 @@ import qualified Data.Text.Lazy as T
 import           Network.HTTP.Conduit (simpleHttp)
 
 
+-- | Whether to use authentication at all. Currently isn't used
 data Auth = Yes | No
 
 
+-- | StackExchange API Request data type.
+--
+-- @a@ is a phantom type showing whether authentication is enabled
+--
+-- @i@ is a phantom type dissallowing combination of
+-- different API calls in one request
+--
+-- @r@ is a type of parsed API call result
 data Request (a ∷ Auth) (i ∷ Nat) r = Request
-  { _host ∷ Text
-  , _path ∷ Text
-  , _query ∷ Map Text Text
-  , _parse ∷ Maybe (ByteString → Maybe r)
+  { _host ∷ Text -- ^ API host link
+  , _path ∷ Text -- ^ API call link
+  , _query ∷ Map Text Text -- ^ API call query parameters
+  , _parse ∷ Maybe (ByteString → Maybe r) -- ^ API call result parsing function
   }
 
 
+-- | Subject to monoid and idempotent laws, they all are checked in request test suite
 instance Monoid (Request a i r) where
   mempty = Request
     { _host = mempty
@@ -52,36 +62,50 @@ instance Monoid (Request a i r) where
     }
 
 
--- | default StackExchange API request
+-- | Default StackExchange API request, defines only host link
 instance Default (Request a i r) where
   def = mempty {_host = "https://api.stackexchange.com/2.1"}
+  {-# INLINE def #-}
 
 
+-- | Request defining only API call path
+--
+-- Primarily used in API call wrappers, not intended for usage by library user
 path ∷ Text → Request a i r
 path p = mempty {_path = p}
+{-# INLINE path #-}
 
 
+-- | Request defining only API call result parsing function
+--
+-- Primarily used in API call wrappers, not intended for usage by library user
 parse ∷ (ByteString → Maybe r) → Request a i r
 parse f = mempty {_parse = Just f}
+{-# INLINE parse #-}
 
 
+-- | Request defining only API call query parameters
+--
+-- Rather low level interface. For more specific usage 'site',
+-- 'filter', etc calls may be more convenient
+--
+--
+-- Takes a list of (key, value) parameters such as @[("order", "asc"), ("sort", "rank")]@
 query ∷ [(Text, Text)] → Request a i r
 query q = mempty {_query = M.fromList q}
+{-# INLINE query #-}
 
 
+-- | Request defining only API call site query parameter
 site ∷ Text → Request a i r
 site s = mempty {_query = M.singleton "site" s}
+{-# INLINE site #-}
 
 
+-- | Request defining only API call filter query parameter
 filter ∷ Text → Request a i r
 filter f = mempty {_query = M.singleton "filter" f}
-
-
--- | To use Request in http-conduit we need to convert it to a string
-render ∷ Request a i r → String
-render r = T.unpack . mconcat $ [_host r, "/", _path r, "?", argie $ _query r]
- where
-  argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty
+{-# INLINE filter #-}
 
 
 askSE ∷ Request a i r → IO (Either ByteString r)
@@ -94,4 +118,10 @@ askSE q = do
       Just r' → return (Right r')
       Nothing → return (Left r)
     Nothing → return (Left r)
-{-# INLINE askSE #-}
+
+
+-- | Render Request as string for networking
+render ∷ Request a i r → String
+render r = T.unpack . mconcat $ [_host r, "/", _path r, "?", argie $ _query r]
+ where
+  argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty
