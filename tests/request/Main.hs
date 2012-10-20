@@ -41,7 +41,7 @@ instance (Ord k, Arbitrary k, Arbitrary v) ⇒ Arbitrary (Map k v) where
 
 instance Arbitrary (Request a i r) where
   arbitrary =
-    Request <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> return Nothing
+    Request <$> arbitrary <*> arbitrary <*> arbitrary <*> return Nothing
 
 
 prop_right_id ∷ Request a i r → Bool

@@ -42,7 +42,7 @@ data Request (a ∷ Auth) (i ∷ Nat) r = Request
   { _host ∷ Text -- ^ API host link
   , _path ∷ Text -- ^ API call link
   , _query ∷ Map Text Text -- ^ API call query parameters
-  , _parse ∷ Maybe (ByteString → Maybe r) -- ^ API call result parsing function
+  , _parse ∷ Maybe (ByteString → Either (ByteString, String) r) -- ^ API call result parsing function
   }
 
 
@@ -79,7 +79,7 @@ path p = mempty {_path = p}
 -- | Request defining only API call result parsing function
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
-parse ∷ (ByteString → Maybe r) → Request a i r
+parse ∷ (ByteString → Either (ByteString, String) r) → Request a i r
 parse f = mempty {_parse = Just f}
 {-# INLINE parse #-}
 
@@ -108,16 +108,11 @@ filter f = mempty {_query = M.singleton "filter" f}
 {-# INLINE filter #-}
 
 
-askSE ∷ Request a i r → IO (Either ByteString r)
+askSE ∷ Request a i r → IO (Either (ByteString, String) r)
 askSE q = do
   let q' = def <> q
-  putStrLn $ render q'
   r ← simpleHttp $ render q'
-  case _parse q' of
-    Just f → case f r of
-      Just r' → return (Right r')
-      Nothing → return (Left r)
-    Nothing → return (Left r)
+  return $ maybe (Left (r, "libstackexchange.askSE: no parsing function registered")) ($ r) (_parse q')
 
 
 -- | Render Request as string for networking

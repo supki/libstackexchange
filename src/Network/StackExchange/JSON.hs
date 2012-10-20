@@ -49,10 +49,12 @@ fields xs = aeson $ mapM (.: xs) <=< parseJSON
 
 
 -- |
-attoparsec ∷ (Value → Maybe b) → String → ByteString → Maybe b
-attoparsec f _ request = case AP.parse A.json request of
-  AP.Done _ s → f s
-  _           → Nothing
+attoparsec ∷ (Value → Maybe b) → String → ByteString → Either (ByteString, String) b
+attoparsec f msg request = case AP.parse A.json request of
+  AP.Done _ s → case f s of
+    Just b → Right b
+    _      → Left (request, "libstackexchange" ++ msg)
+  _           → Left (request, "libstackexchange" ++ msg)
 
 
 items ∷ Monad m ⇒ Value → m [SE a]
