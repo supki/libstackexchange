@@ -26,7 +26,6 @@ import qualified Data.Attoparsec.Lazy as AP
 import           Data.Text (Text)
 
 import Network.StackExchange.Types
-import Control.Monad.StackExchange (StackExchangeT)
 
 
 -- | Generalized combinator, useful if user wants full power of Aeson
@@ -50,11 +49,10 @@ fields xs = aeson $ mapM (.: xs) <=< parseJSON
 
 
 -- |
-attoparsec ∷ Monad m ⇒ (Value → StackExchangeT a m b) → String → ByteString → StackExchangeT a m b
-attoparsec f msg request = case AP.parse A.json request of
+attoparsec ∷ (Value → Maybe b) → String → ByteString → Maybe b
+attoparsec f _ request = case AP.parse A.json request of
   AP.Done _ s → f s
-  _           → fail $ msg ++ "Malformed JSON, cannot parse"
-
+  _           → Nothing
 
 
 items ∷ Monad m ⇒ Value → m [SE a]

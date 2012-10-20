@@ -13,6 +13,7 @@ cabal-version: >= 1.8
 library
   build-depends: base >= 4.6,
                  bytestring,
+                 data-default,
                  mtl,
                  attoparsec,
                  text,
@@ -22,12 +23,9 @@ library
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
                    Network.StackExchange.API
-                   Network.StackExchange.API.Answer
-                   Network.StackExchange.API.Filter
-                   Network.StackExchange.URI
+                   Network.StackExchange.Request
                    Network.StackExchange.Types
                    Network.StackExchange.JSON
-                   Control.Monad.StackExchange
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 
