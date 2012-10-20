@@ -5,11 +5,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main (main) where
 
-import Control.Applicative ((<$>), (<*>), liftA3)
+import Control.Applicative ((<$>), (<*>))
 import Data.Monoid ((<>), mempty)
 import System.Exit (exitFailure, exitSuccess)
 
 import           Network.StackExchange.Request
+import           Data.Map (Map)
+import qualified Data.Map as M
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Test.QuickCheck
@@ -33,6 +35,10 @@ instance Arbitrary Text where
   arbitrary = T.pack <$> arbitrary
 
 
+instance (Ord k, Arbitrary k, Arbitrary v) ⇒ Arbitrary (Map k v) where
+  arbitrary = M.fromList <$> arbitrary
+
+
 instance Arbitrary (Request a i r) where
   arbitrary =
     Request <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> return Nothing
@@ -50,10 +56,18 @@ prop_associative ∷ Request a i r → Request a i r → Request a i r → Bool
 prop_associative x y z = (x <> y) <> z == x <> (y <> z)
 
 
+prop_idempotent ∷ Request a i r → Bool
+prop_idempotent x = x <> x == x
+
+
 main ∷ IO ()
-main = liftA3 (,,) (check prop_right_id) (check prop_left_id) (check prop_associative) >>= \case
-  (True,True,True) → exitSuccess
-  _                → exitFailure
+main = (,,,) <$>
+  (check prop_right_id) <*>
+  (check prop_left_id) <*>
+  (check prop_associative) <*>
+  (check prop_idempotent) >>= \case
+  (True,True,True,True) → exitSuccess
+  _                     → exitFailure
  where
   check p = success <$> quickCheckWithResult (stdArgs {maxSuccess = 300}) p
 

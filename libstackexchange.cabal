@@ -13,6 +13,7 @@ cabal-version: >= 1.8
 library
   build-depends: base >= 4.6,
                  bytestring,
+                 containers,
                  data-default,
                  mtl,
                  attoparsec,
@@ -48,6 +49,7 @@ test-suite aeson-lens
 
 test-suite request
   build-depends: base >= 4.6,
+                 containers,
                  text,
                  QuickCheck,
                  libstackexchange

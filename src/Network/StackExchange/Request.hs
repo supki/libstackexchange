@@ -19,6 +19,8 @@ import GHC.TypeLits
 
 import           Data.ByteString.Lazy (ByteString)
 import           Data.Default (Default(..))
+import           Data.Map (Map)
+import qualified Data.Map as M
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Network.HTTP.Conduit (simpleHttp)
@@ -32,7 +34,7 @@ data Request (a ∷ Auth) (i ∷ Nat) r = Request
   , _path ∷ Text
   , _filter ∷ Text
   , _site ∷ Text
-  , _query ∷ [(Text, Text)]
+  , _query ∷ Map Text Text
   , _parse ∷ Maybe (ByteString → Maybe r)
   }
 
@@ -58,14 +60,7 @@ instance Monoid (Request a i r) where
 
 -- | default StackExchange API request
 instance Default (Request a i r) where
-  def = Request
-    { _host = "https://api.stackexchange.com/2.1"
-    , _path = ""
-    , _filter = ""
-    , _site = ""
-    , _query = []
-    , _parse = Nothing
-    }
+  def = mempty {_host = "https://api.stackexchange.com/2.1"}
 
 
 path ∷ Text → Request a i r
@@ -77,7 +72,7 @@ parse f = mempty {_parse = Just f}
 
 
 query ∷ [(Text, Text)] → Request a i r
-query q = mempty {_query = q}
+query q = mempty {_query = M.fromList q}
 
 
 site ∷ Text → Request a i r
@@ -86,7 +81,7 @@ site s = mempty {_site = s}
 
 -- | To use Request in http-conduit we need to convert it to a string
 render ∷ Request a i r → String
-render r = T.unpack . mconcat $ [_host r, "/", _path r, "?site=", _site r, argie $ _query r]
+render r = T.unpack . mconcat $ [_host r, "/", _path r, "?site=", _site r, argie . M.toList $ _query r]
  where
   argie = foldMap (\(a, b) → mconcat ["&", a, "=", b])
 
