@@ -47,12 +47,12 @@ instance Monoid (Request a i r) where
     , _parse = Nothing
     }
   l `mappend` r = Request
-    { _host = _host $ if T.null $ _host l then r else l
-    , _path = _path $ if T.null $ _path l then r else l
-    , _site = _site $ if T.null $ _site l then r else l
-    , _filter = _filter $ if T.null $ _filter l then r else l
+    { _host = _host $ if T.null $ _host r then l else r
+    , _path = _path $ if T.null $ _path r then l else r
+    , _site = _site $ if T.null $ _site r then l else r
+    , _filter = _filter $ if T.null $ _filter r then l else r
     , _query = _query l <> _query r
-    , _parse = _parse $ case _parse l of Just _ → l; Nothing → r
+    , _parse = _parse $ case _parse r of Just _ → r; Nothing → l
     }
 
 
@@ -61,7 +61,7 @@ instance Default (Request a i r) where
   def = Request
     { _host = "https://api.stackexchange.com/2.1"
     , _path = ""
-    , _filter = "default"
+    , _filter = ""
     , _site = ""
     , _query = []
     , _parse = Nothing
