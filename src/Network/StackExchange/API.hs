@@ -60,3 +60,9 @@ readFilter (T.intercalate ";" → filters) =
   path "filters" <>
   query [("filters", filters)] <>
   parse (attoparsec items ".filters: ")
+
+
+-- | <https://api.stackexchange.com/docs/users-by-ids>
+usersByIds ∷ [Int] → Request a 8 [SE User]
+usersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("users/" <> is) <> parse (attoparsec items ".users/{ids}: ")

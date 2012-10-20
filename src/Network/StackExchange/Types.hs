@@ -45,4 +45,4 @@ data Object =
   | WritePermission
 
 
-newtype SE (a ∷ Object) = SE Value deriving Show
+newtype SE (a ∷ Object) = SE { unSE ∷ Value } deriving Show
