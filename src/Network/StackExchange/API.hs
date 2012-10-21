@@ -537,31 +537,93 @@ topAskersOnTag t p =
 -- Tag Synonyms
 --------------------------
 
+-- | <https://api.stackexchange.com/docs/tag-synonyms>
+tagSynonyms ∷ Request a 68 [SE TagSynonym]
+tagSynonyms =
+  path "tags/synonyms" <> parse (attoparsec items ".tags/synonyms: ")
+
+
+-- | <https://api.stackexchange.com/docs/synonyms-by-tags>
+synonymsByTags ∷ [Text] → Request a 69 [SE TagSynonym]
+synonymsByTags (T.intercalate ";" → ts) =
+  path ("tags/" <> ts <> "/synonyms") <>
+  parse (attoparsec items ".tags/{tags}/synonyms: ")
+
 
 --------------------------
 -- Tag Wikis
 --------------------------
+
+-- | <https://api.stackexchange.com/docs/wikis-by-tags>
+wikisByTags ∷ [Text] → Request a 70 [SE TagWiki]
+wikisByTags (T.intercalate ";" → ts) =
+  path ("tags/" <> ts <> "/wikis") <>
+  parse (attoparsec items ".tags/{tags}/wikis: ")
 
 
 --------------------------
 -- Top Tags
 --------------------------
 
+-- | <https://api.stackexchange.com/docs/top-answer-tags-on-users>
+topAnswerTagsOnUsers ∷ Int → Request a 71 [SE TagTop]
+topAnswerTagsOnUsers (toLazyText . decimal → i) =
+  path ("users/" <> i <> "/top-answer-tags") <>
+  parse (attoparsec items ".users/{id}/top-answer-tags: ")
+
+
+-- | <https://api.stackexchange.com/docs/top-question-tags-on-users>
+topQuestionTagsOnUsers ∷ Int → Request a 72 [SE TagTop]
+topQuestionTagsOnUsers (toLazyText . decimal → i) =
+  path ("users/" <> i <> "/top-question-tags") <>
+  parse (attoparsec items ".users/{id}/top-question-tags: ")
+
 
 --------------------------
 -- Users
 --------------------------
+
+-- | <https://api.stackexchange.com/docs/users>
+users ∷ Request a 73 [SE User]
+users = path "users" <> parse (attoparsec items ".users: ")
+
 
 -- | <https://api.stackexchange.com/docs/users-by-ids>
 usersByIds ∷ [Int] → Request a 8 [SE User]
 usersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is) <> parse (attoparsec items ".users/{ids}: ")
 
+
+-- | <https://api.stackexchange.com/docs/moderators>
+moderators ∷ Request a 74 [SE User]
+moderators =
+  path "users/moderators" <> parse (attoparsec items ".users/moderators: ")
+
+
+-- | <https://api.stackexchange.com/docs/elected-moderators>
+electedModerators ∷ Request a 75 [SE User]
+electedModerators =
+  path "users/moderators/elected" <>
+  parse (attoparsec items ".users/moderators/elected: ")
+
+
 --------------------------
 -- User Timeline
 --------------------------
+
+-- | <https://api.stackexchange.com/docs/timeline-on-users>
+timelineOnUsers ∷ [Int] → Request a 76 [SE UserTimeline]
+timelineOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("users/" <> is <> "/timeline") <>
+  parse (attoparsec items ".users/{ids}/timeline: ")
 
 
 --------------------------
 -- Write Permissions
 --------------------------
+
+-- | <https://api.stackexchange.com/docs/write-permissions>
+writePermission ∷ Int → Request a 77 [SE WritePermission]
+writePermission (toLazyText . decimal → i) =
+  path ("users/" <> i <> "/write-permissions") <>
+  parse (attoparsec items ".users/{id}/write-permissions: ")
