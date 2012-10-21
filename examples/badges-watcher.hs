@@ -3,16 +3,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-import Control.Lens
 import Data.Monoid ((<>))
 import System.Exit (exitFailure)
+
+import Control.Lens
 
 import Network.StackExchange
 
 
 main ∷ IO ()
 main = do
-  askSE (badgesOnUsers [972985] <> site "stackoverflow") >>= \case
+  askSE (badgesOnUsers [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA((") >>= \case
     Right xs → do
       let ranks = xs ^.. traverse . to unSE . field "rank" ∷ [String]
           badgesCount = \τ → length . Prelude.filter (== τ)

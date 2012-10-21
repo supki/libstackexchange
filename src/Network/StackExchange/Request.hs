@@ -8,7 +8,7 @@ module Network.StackExchange.Request
   ( -- * Types
     Request(..), Auth(..)
     -- * Construct request
-  , path, parse, query, site, filter
+  , path, parse, query, site, filter, key
     -- * Schedule request
   , askSE
   ) where
@@ -106,6 +106,12 @@ site s = mempty {_query = M.singleton "site" s}
 filter ∷ Text → Request a i r
 filter f = mempty {_query = M.singleton "filter" f}
 {-# INLINE filter #-}
+
+
+-- | Request defining only App key
+key ∷ Text → Request a i r
+key s = mempty {_query = M.singleton "key" s}
+{-# INLINE key #-}
 
 
 askSE ∷ Request a i r → IO (Either (ByteString, String) r)
