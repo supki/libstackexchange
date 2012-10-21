@@ -321,8 +321,8 @@ similar t (T.intercalate ";" → ts) =
 
 -- | <https://api.stackexchange.com/docs/faqs-by-tags>
 faqsByTags ∷ [Text] → Request a 40 [SE Question]
-faqsByTags (T.intercalate ";" → tags) =
-  path ("tags/" <> tags <> "/faq") <>
+faqsByTags (T.intercalate ";" → ts) =
+  path ("tags/" <> ts <> "/faq") <>
   parse (attoparsec items ".tags/{tags}/faq: ")
 
 
@@ -370,8 +370,8 @@ unansweredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
 
 -- | <https://api.stackexchange.com/docs/top-user-questions-in-tags>
 topUserQuestionsInTags ∷ Int → [Text] → Request a 47 [SE Question]
-topUserQuestionsInTags ((toLazyText . decimal) → i) (T.intercalate ";" → tags) =
-  path ("users/" <> i <> "/tags/" <> tags <> "/top-questions") <>
+topUserQuestionsInTags ((toLazyText . decimal) → i) (T.intercalate ";" → ts) =
+  path ("users/" <> i <> "/tags/" <> ts <> "/top-questions") <>
     parse (attoparsec items ".users/{id}/tags/{tags}/top-questions: ")
 
 
@@ -426,7 +426,142 @@ revisionsByGuids (T.intercalate ";" → is) =
   parse (attoparsec items ".revisions/{ids}: ")
 
 
+--------------------------
+-- Sites
+--------------------------
+
+-- | <https://api.stackexchange.com/docs/sites>
+sites ∷ Request a 55 [SE Site]
+sites = path "sites" <> parse (attoparsec items ".sites: ")
+
+
+--------------------------
+-- Suggested Edits
+--------------------------
+
+-- | <https://api.stackexchange.com/docs/posts-on-suggested-edits>
+postsOnSuggestedEdits ∷ [Int] → Request a 56 [SE SuggestedEdit]
+postsOnSuggestedEdits (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("posts/" <> is <> "/suggested-edits") <>
+  parse (attoparsec items ".posts/{ids}/suggested-edits: ")
+
+
+-- | <https://api.stackexchange.com/docs/suggested-edits>
+suggestedEdits ∷ Request a 57 [SE SuggestedEdit]
+suggestedEdits =
+  path "suggested-edits" <> parse (attoparsec items ".suggested-edits: ")
+
+
+-- | <https://api.stackexchange.com/docs/suggested-edits-by-ids>
+suggestedEditsByIds ∷ [Int] → Request a 58 [SE SuggestedEdit]
+suggestedEditsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("suggested-edits/" <> is ) <>
+  parse (attoparsec items ".suggested-edits/{ids}: ")
+
+
+-- | <https://api.stackexchange.com/docs/suggested-edits-on-users>
+suggestedEditsOnUsers ∷ [Int] → Request a 59 [SE SuggestedEdit]
+suggestedEditsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("users/" <> is <> "/suggested-edits") <>
+  parse (attoparsec items ".users/{ids}/suggested-edits: ")
+
+
+--------------------------
+-- Tags
+--------------------------
+
+-- | <https://api.stackexchange.com/docs/tags>
+tags ∷ Request a 60 [SE Tag]
+tags = path "tags" <> parse (attoparsec items ".tags: ")
+
+
+-- | <https://api.stackexchange.com/docs/moderator-only-tags>
+moderatorOnlyTags ∷ Request a 61 [SE Tag]
+moderatorOnlyTags =
+  path "tags/moderator-only" <>
+  parse (attoparsec items ".tags/moderator-only: ")
+
+
+-- | <https://api.stackexchange.com/docs/required-tags>
+requiredTags ∷ Request a 62 [SE Tag]
+requiredTags =
+  path "tags/required" <> parse (attoparsec items ".tags/required: ")
+
+
+-- | <https://api.stackexchange.com/docs/tags-by-name>
+tagsByName ∷ [Text] → Request a 63 [SE Tag]
+tagsByName (T.intercalate ";" → ts) =
+  path ("tags/" <> ts <> "/info") <>
+  parse (attoparsec items ".tags/{tags}/info: ")
+
+
+-- | <https://api.stackexchange.com/docs/related-tags>
+relatedTags ∷ [Text] → Request a 64 [SE Tag]
+relatedTags (T.intercalate ";" → ts) =
+  path ("tags/" <> ts <> "/related") <>
+  parse (attoparsec items ".tags/{tags}/related: ")
+
+
+-- | <https://api.stackexchange.com/docs/tags-on-users>
+tagsOnUsers ∷ [Int] → Request a 65 [SE Tag]
+tagsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("users/" <> is <> "/tags") <>
+  parse (attoparsec items ".users/{ids}/tags: ")
+
+
+--------------------------
+-- Tag Scores
+--------------------------
+data Period = AllTime | Month
+
+topath ∷ Period → Text
+topath Month = "month"
+topath _     = "all_time"
+
+
+-- | <https://api.stackexchange.com/docs/top-answerers-on-tags>
+topAnswerersOnTag ∷ Text → Period → Request a 66 [SE TagScore]
+topAnswerersOnTag t p =
+  path ("tags/" <> t <> "/top-answerers/" <> (topath p)) <>
+  parse (attoparsec items ".tags/{tag}/top-answerers/{period}: ")
+
+
+-- | <https://api.stackexchange.com/docs/top-askers-on-tags>
+topAskersOnTag ∷ Text → Period → Request a 67 [SE TagScore]
+topAskersOnTag t p =
+  path ("tags/" <> t <> "/top-askers/" <> (topath p)) <>
+  parse (attoparsec items ".tags/{tag}/top-askers/{period}: ")
+
+
+--------------------------
+-- Tag Synonyms
+--------------------------
+
+
+--------------------------
+-- Tag Wikis
+--------------------------
+
+
+--------------------------
+-- Top Tags
+--------------------------
+
+
+--------------------------
+-- Users
+--------------------------
+
 -- | <https://api.stackexchange.com/docs/users-by-ids>
 usersByIds ∷ [Int] → Request a 8 [SE User]
 usersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is) <> parse (attoparsec items ".users/{ids}: ")
+
+--------------------------
+-- User Timeline
+--------------------------
+
+
+--------------------------
+-- Write Permissions
+--------------------------
