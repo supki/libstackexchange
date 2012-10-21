@@ -23,7 +23,7 @@ data Object =
   | Notice
   | Notification
   | Post
-  | Priviledge
+  | Privilege
   | Question
   | QuestionTimeline
   | RelatedSite
