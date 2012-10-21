@@ -46,6 +46,44 @@ topUserAnswersInTags (toLazyText . decimal → i) (T.intercalate ";" → ts) =
   parse (attoparsec items ".users/{id}/tags/{tags}/top-answers: ")
 
 
+-- | <https://api.stackexchange.com/docs/badges>
+badges ∷ Request a 9 [SE Answer]
+badges = path "badges" <> parse (attoparsec items ".badges: ")
+
+
+-- | <https://api.stackexchange.com/docs/badges-by-ids>
+badgesByIds ∷ [Int] → Request a 10 [SE Answer]
+badgesByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("badges/" <> is) <> parse (attoparsec items ".badges/{ids}: ")
+
+
+-- | <https://api.stackexchange.com/docs/badge-recipients-by-ids>
+badgeRecipientsByIds ∷ [Int] → Request a 11 [SE Answer]
+badgeRecipientsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("badges" <> is <> "/recipients") <> parse (attoparsec items ".badges/{ids}/recipients: ")
+
+
+-- | <https://api.stackexchange.com/docs/badges-by-name>
+badgesByName ∷ Request a 12 [SE Answer]
+badgesByName = path ("badges" <> "/name") <> parse (attoparsec items ".badges/name: ")
+
+
+-- | <https://api.stackexchange.com/docs/badge-recipients>
+badgeRecipients ∷ Request a 13 [SE Answer]
+badgeRecipients = path ("badges" <> "/recipients") <> parse (attoparsec items ".badges/recipients: ")
+
+
+-- | <https://api.stackexchange.com/docs/badges-by-tag>
+badgesByTag ∷ Request a 14 [SE Answer]
+badgesByTag = path ("badges" <> "/tags") <> parse (attoparsec items ".badges/tags: ")
+
+
+-- | <https://api.stackexchange.com/docs/badges-on-users>
+badgesOnUsers ∷ [Int] → Request a 15 [SE Answer]
+badgesOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("users/" <> is <> "/badges") <> parse (attoparsec items ".users/{ids}/badges: ")
+
+
 -- | <https://api.stackexchange.com/docs/create-filter>
 createFilter ∷ [Text] → [Text] → Text → Request a 6 (SE Filter)
 createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) base =
