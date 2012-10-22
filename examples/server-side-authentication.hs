@@ -12,13 +12,11 @@
 -- That's it.
 module Main where
 
-import Control.Applicative ((<$>))
 import Control.Monad
 import Data.IORef
 
-import           Control.Monad.Trans (liftIO)
-import qualified Data.Text.Lazy as T
-import           Happstack.Server hiding (host, path)
+import Control.Monad.Trans (liftIO)
+import Happstack.Server hiding (host, path)
 
 import Network.StackExchange
 
@@ -26,18 +24,13 @@ import Network.StackExchange
 main ∷ IO ()
 main = do
   tokens ← newIORef []
-  let add t = atomicModifyIORef tokens (\xs → (t:xs, ()))
   simpleHTTP nullConf $ msum
-    [ dir "authenticate-me-please" $ do
-        seeOther (render $ askPermission cID rURI) "Okay."
+    [ dir "authenticate-me-please" $ seeOther (render $ askPermission cID rURI) ""
     , dir "save-token" $ do
-        c ← T.pack <$> look "code"
-        Right t ← liftIO . askSE $ accessToken cID cSecret c rURI
-        liftIO $ add t
+        c ← lookText "code"
+        liftIO $ askSE (accessToken cID cSecret c rURI) >>= \(Right t) → modifyIORef' tokens (t:)
         ok "Saved."
-    , dir "show-tokens" $ do
-        m ← liftIO $ readIORef tokens
-        ok (show m)
+    , dir "show-tokens" $ liftIO (readIORef tokens) >>= ok . show
     ]
  where
   rURI = ###
