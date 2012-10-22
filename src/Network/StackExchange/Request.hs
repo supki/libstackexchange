@@ -8,9 +8,9 @@ module Network.StackExchange.Request
   ( -- * Types
     Request(..), Auth(..)
     -- * Construct request
-  , path, parse, query, site, filter, key
+  , host, path, parse, query, site, filter, key
     -- * Schedule request
-  , askSE
+  , render, askSE
   ) where
 
 import Data.Monoid (Monoid(..), (<>))
@@ -66,6 +66,14 @@ instance Monoid (Request a i r) where
 instance Default (Request a i r) where
   def = mempty {_host = "https://api.stackexchange.com/2.1"}
   {-# INLINE def #-}
+
+
+-- | Request defining only API call host
+--
+-- Primarily used in Auth, not intended for usage by library user
+host ∷ Text → Request a i r
+host p = mempty {_host = p}
+{-# INLINE host #-}
 
 
 -- | Request defining only API call path

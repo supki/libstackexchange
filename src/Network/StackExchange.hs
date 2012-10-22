@@ -4,6 +4,7 @@ module Network.StackExchange
   ) where
 
 import Network.StackExchange.API as S
+import Network.StackExchange.Auth as S
 import Network.StackExchange.JSON as S
 import Network.StackExchange.Request as S
 import Network.StackExchange.Types as S
