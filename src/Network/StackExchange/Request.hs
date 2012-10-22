@@ -8,22 +8,25 @@ module Network.StackExchange.Request
   ( -- * Types
     Request(..), Auth(..)
     -- * Construct request
-  , path, parse, query, site, filter
+  , host, path, method, parse
+  , query, token, site, filter, key
     -- * Schedule request
-  , askSE
+  , render, askSE
   ) where
 
+import Control.Applicative ((<$>))
 import Data.Monoid (Monoid(..), (<>))
 import GHC.TypeLits
 import Prelude hiding (filter)
 
-import           Data.ByteString.Lazy (ByteString)
+import           Data.ByteString.Lazy (ByteString, toStrict)
 import           Data.Default (Default(..))
 import           Data.Map (Map)
 import qualified Data.Map as M
+import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import           Network.HTTP.Conduit (simpleHttp)
+import qualified Network.HTTP.Conduit as C
 
 
 -- | Whether to use authentication at all. Currently isn't used
@@ -41,6 +44,7 @@ data Auth = Yes | No
 data Request (a ∷ Auth) (i ∷ Nat) r = Request
   { _host ∷ Text -- ^ API host link
   , _path ∷ Text -- ^ API call link
+  , _method ∷ Text
   , _query ∷ Map Text Text -- ^ API call query parameters
   , _parse ∷ Maybe (ByteString → Either (ByteString, String) r) -- ^ API call result parsing function
   }
@@ -51,12 +55,14 @@ instance Monoid (Request a i r) where
   mempty = Request
     { _host = mempty
     , _path = mempty
+    , _method = mempty
     , _query = mempty
     , _parse = Nothing
     }
   l `mappend` r = Request
     { _host = _host $ if T.null $ _host r then l else r
     , _path = _path $ if T.null $ _path r then l else r
+    , _method = _method $ if T.null $ _method r then l else r
     , _query = _query r <> _query l
     , _parse = _parse $ case _parse r of Just _ → r; Nothing → l
     }
@@ -64,8 +70,16 @@ instance Monoid (Request a i r) where
 
 -- | Default StackExchange API request, defines only host link
 instance Default (Request a i r) where
-  def = mempty {_host = "https://api.stackexchange.com/2.1"}
+  def = mempty {_host = "https://api.stackexchange.com/2.1", _method = "GET"}
   {-# INLINE def #-}
+
+
+-- | Request defining only API call host
+--
+-- Primarily used in Auth, not intended for usage by library user
+host ∷ Text → Request a i r
+host p = mempty {_host = p}
+{-# INLINE host #-}
 
 
 -- | Request defining only API call path
@@ -74,6 +88,14 @@ instance Default (Request a i r) where
 path ∷ Text → Request a i r
 path p = mempty {_path = p}
 {-# INLINE path #-}
+
+
+-- | Request defining only call method
+--
+-- Primarily used in API call wrappers, not intended for usage by library user
+method ∷ Text → Request a i r
+method m = mempty {_method = m}
+{-# INLINE method #-}
 
 
 -- | Request defining only API call result parsing function
@@ -96,6 +118,14 @@ query q = mempty {_query = M.fromList q}
 {-# INLINE query #-}
 
 
+-- | Request defining only API call access token
+--
+-- Primarily used in API call wrappers, not intended for usage by library user
+token ∷ Text → Request Yes i r
+token t = mempty {_query = M.singleton "access_token" t}
+{-# INLINE token #-}
+
+
 -- | Request defining only API call site query parameter
 site ∷ Text → Request a i r
 site s = mempty {_query = M.singleton "site" s}
@@ -108,10 +138,18 @@ filter f = mempty {_query = M.singleton "filter" f}
 {-# INLINE filter #-}
 
 
+-- | Request defining only App key
+key ∷ Text → Request a i r
+key s = mempty {_query = M.singleton "key" s}
+{-# INLINE key #-}
+
+
 askSE ∷ Request a i r → IO (Either (ByteString, String) r)
 askSE q = do
   let q' = def <> q
-  r ← simpleHttp $ render q'
+  r ← C.withManager $ \m →
+    C.parseUrl (render q') >>= \url →
+      C.responseBody <$> C.httpLbs (url { C.method = toStrict . encodeUtf8 $ _method q' }) m
   return $ maybe (Left (r, "libstackexchange.askSE: no parsing function registered")) ($ r) (_parse q')
 
 
