@@ -4,7 +4,7 @@ module Network.StackExchange.Auth
   ( -- * Authentication related routines
     askPermission, accessToken
     -- * Authentication customization
-  , state
+  , state, Scope(..), scope
   ) where
 
 import Control.Applicative ((<$>), (*>))
@@ -21,6 +21,9 @@ import           Data.Text.Lazy.Builder.Int (decimal)
 import qualified Data.Attoparsec.Text.Lazy as P
 
 import Network.StackExchange.Request
+
+
+data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 
 
 askPermission ∷ Int → Text → Request a i r
@@ -60,3 +63,13 @@ secret c = mempty {_query = M.singleton "client_secret" c}
 
 code ∷ Text → Request a i r
 code c = mempty {_query = M.singleton "code" c}
+
+
+scope ∷ [Scope] → Request a i r
+scope ss = mempty {_query = M.singleton "scope" $ scopie ss}
+ where
+  scopie = T.intercalate " " . map toText
+  toText ReadInbox = "read_inbox"
+  toText NoExpiry = "no_expiry"
+  toText WriteAccess = "write_access"
+  toText PrivateInfo = "private_info"
