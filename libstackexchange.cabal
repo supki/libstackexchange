@@ -10,24 +10,26 @@ category:      NetworkAPIs
 build-type:    Simple
 cabal-version: >= 1.8
 
+flag enable-examples
+  default: False
+
 library
   build-depends: base >= 4.6,
                  bytestring,
                  containers,
                  data-default,
-                 mtl,
                  attoparsec,
                  text,
                  aeson,
                  http-conduit,
-                 lens >= 3.0.2
+                 lens
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
                    Network.StackExchange.API
-                   Network.StackExchange.Request
-                   Network.StackExchange.Types
-                   Network.StackExchange.JSON
                    Network.StackExchange.Auth
+                   Network.StackExchange.Request
+                   Network.StackExchange.Response
+                   Network.StackExchange.Types
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 
@@ -35,7 +37,6 @@ test-suite aeson-lens
   build-depends: base >= 4.6,
                  template-haskell,
                  bytestring,
-                 mtl,
                  attoparsec,
                  aeson,
                  lens,
@@ -59,3 +60,29 @@ test-suite request
   hs-source-dirs: tests/request
   ghc-options: -Wall
                -fno-warn-unused-do-bind
+
+executable rep-watcher
+  if !flag(enable-examples)
+    buildable: False
+  build-depends: base >= 4.6,
+                 lens,
+                 libstackexchange
+  main-is: examples/rep-watcher.hs
+
+executable badges-watcher
+  if !flag(enable-examples)
+    buildable: False
+  build-depends: base >= 4.6,
+                 lens,
+                 libstackexchange
+  main-is: examples/badges-watcher.hs
+
+executable server-side-authentication
+  if !flag(enable-examples)
+    buildable: False
+  build-depends: base >= 4.6,
+                 lens,
+                 mtl,
+                 happstack-server,
+                 libstackexchange
+  main-is: examples/server-side-authentication.hs

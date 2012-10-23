@@ -8,22 +8,17 @@ module Network.StackExchange.Auth
   ) where
 
 import Control.Applicative ((<$>), (*>))
-import Data.Monoid ((<>), mempty)
+import Control.Exception (throw)
+import Data.Monoid ((<>), mconcat)
 import Prelude hiding (id)
 
-import qualified Data.Map as M
-import           Data.ByteString.Lazy (ByteString)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Encoding (decodeUtf8)
-import           Data.Text.Lazy.Builder (toLazyText)
-import           Data.Text.Lazy.Builder.Int (decimal)
 import qualified Data.Attoparsec.Text.Lazy as P
 
+import Network.StackExchange.Response
 import Network.StackExchange.Request
-
-
-data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 
 
 askPermission ∷ Int → Text → Request a i r
@@ -31,45 +26,19 @@ askPermission c r = host "https://stackexchange.com/oauth" <> id c <> redirectUR
 
 
 accessToken ∷ Int → Text → Text → Text → Request a i Text
-accessToken c s c' r =
-  host "https://stackexchange.com/oauth/access_token" <> id c <> secret s <> code c' <> redirectURI r <>
-  parse parseToken <>
-  method "POST"
+accessToken c s c' r = mconcat
+  [ host "https://stackexchange.com/oauth/access_token"
+  , id c
+  , secret s
+  , code c'
+  , redirectURI r
+  , parse parseToken
+  , method "POST"
+  ]
  where
-  parseToken ∷ ByteString → Either (ByteString, String) Text
   parseToken bs = case P.eitherResult $ P.parse parser (decodeUtf8 bs) of
-    Right t → Right t
-    Left e → Left (bs, show e)
+    Right t → t
+    Left e → throw $ SEException bs ("libstackexchange.accessToken: " ++ show e)
 
   parser ∷ P.Parser Text
   parser = P.string "access_token=" *> (T.pack <$> P.manyTill P.anyChar (P.char '&'))
-
-
-state ∷ Text → Request a i r
-state s = mempty {_query = M.singleton "state" s}
-
-
-id ∷ Int → Request a i r
-id c = mempty {_query = M.singleton "client_id" (toLazyText $ decimal c)}
-
-
-redirectURI ∷ Text → Request a i r
-redirectURI r = mempty {_query = M.singleton "redirect_uri" r}
-
-
-secret ∷ Text → Request a i r
-secret c = mempty {_query = M.singleton "client_secret" c}
-
-
-code ∷ Text → Request a i r
-code c = mempty {_query = M.singleton "code" c}
-
-
-scope ∷ [Scope] → Request a i r
-scope ss = mempty {_query = M.singleton "scope" $ scopie ss}
- where
-  scopie = T.intercalate " " . map toText
-  toText ReadInbox = "read_inbox"
-  toText NoExpiry = "no_expiry"
-  toText WriteAccess = "write_access"
-  toText PrivateInfo = "private_info"

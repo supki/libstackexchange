@@ -6,12 +6,18 @@ module Network.StackExchange.API where
 
 import Data.Monoid ((<>))
 
+import           Control.Exception (throw)
+import           Control.Lens ((^!))
+import           Data.Aeson (Value)
+import qualified Data.Aeson as A
+import qualified Data.Attoparsec.Lazy as AP
+import           Data.ByteString.Lazy (ByteString)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Builder (toLazyText)
 import           Data.Text.Lazy.Builder.Int (decimal)
 
-import Network.StackExchange.JSON
+import Network.StackExchange.Response
 import Network.StackExchange.Request
 import Network.StackExchange.Types
 
@@ -627,3 +633,15 @@ writePermission ∷ Int → Request a 77 [SE WritePermission]
 writePermission (toLazyText . decimal → i) =
   path ("users/" <> i <> "/write-permissions") <>
   parse (attoparsec items ".users/{id}/write-permissions: ")
+
+
+attoparsec ∷ (Value → Maybe b) → String → ByteString → b
+attoparsec f msg request = case AP.eitherResult $ AP.parse A.json request of
+  Right s → case f s of
+    Just b → b
+    Nothing → throw $ SEException request ("libstackexchange" ++ msg ++ "incorrect JSON content")
+  Left e → throw $ SEException request ("libstackexchange" ++ msg ++ e)
+
+
+items ∷ (Functor m, Monad m) ⇒ Value → m [SE a]
+items s = map SE `fmap` (s ^! field "items")

@@ -9,11 +9,11 @@ import Control.Applicative ((<$>), (<*>))
 import Data.Monoid ((<>), mempty)
 import System.Exit (exitFailure, exitSuccess)
 
-import           Network.StackExchange.Request
 import           Data.Map (Map)
 import qualified Data.Map as M
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
+import           Network.StackExchange.Request
 import           Test.QuickCheck
 
 

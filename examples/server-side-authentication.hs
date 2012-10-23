@@ -28,13 +28,13 @@ main = do
     [ dir "authenticate-me-please" $ seeOther (render $ askPermission cID rURI) ""
     , dir "save-token" $ do
         c ← lookText "code"
-        liftIO $ askSE (accessToken cID cSecret c rURI) >>= \(Right t) → modifyIORef' tokens (t:)
+        liftIO $ askSE (accessToken cID cSecret c rURI) >>= modifyIORef' tokens . (:)
         ok "Saved."
     , dir "show-tokens" $ liftIO (readIORef tokens) >>= ok . show
     ]
  where
-  rURI = ###
+  rURI = undefined
 
-  cID = ###
+  cID = undefined
 
-  cSecret = ###
+  cSecret = undefined

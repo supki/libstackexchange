@@ -1,32 +1,30 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
--- | StackExchange API server URI manipulation routines.
+-- | StackExchange API request manipulation routines.
 module Network.StackExchange.Request
-  ( -- * Types
+  ( -- * Type
     Request(..), Auth(..)
-    -- * Construct request
+    -- * Constructing requests
   , host, path, method, parse
-  , query, token, site, filter, key
-    -- * Schedule request
-  , render, askSE
+  , query, token, key, site, filter, state, Scope(..), scope
+  , id, redirectURI, secret, code
   ) where
 
-import Control.Applicative ((<$>))
 import Data.Monoid (Monoid(..), (<>))
 import GHC.TypeLits
-import Prelude hiding (filter)
+import Prelude hiding (filter, id)
 
-import           Data.ByteString.Lazy (ByteString, toStrict)
+import           Data.ByteString.Lazy (ByteString)
 import           Data.Default (Default(..))
 import           Data.Map (Map)
 import qualified Data.Map as M
-import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import qualified Network.HTTP.Conduit as C
+import           Data.Text.Lazy.Builder (toLazyText)
+import           Data.Text.Lazy.Builder.Int (decimal)
 
 
 -- | Whether to use authentication at all. Currently isn't used
@@ -46,7 +44,7 @@ data Request (a ∷ Auth) (i ∷ Nat) r = Request
   , _path ∷ Text -- ^ API call link
   , _method ∷ Text
   , _query ∷ Map Text Text -- ^ API call query parameters
-  , _parse ∷ Maybe (ByteString → Either (ByteString, String) r) -- ^ API call result parsing function
+  , _parse ∷ Maybe (ByteString → r) -- ^ API call result parsing function
   }
 
 
@@ -101,7 +99,7 @@ method m = mempty {_method = m}
 -- | Request defining only API call result parsing function
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
-parse ∷ (ByteString → Either (ByteString, String) r) → Request a i r
+parse ∷ (ByteString → r) → Request a i r
 parse f = mempty {_parse = Just f}
 {-# INLINE parse #-}
 
@@ -126,6 +124,12 @@ token t = mempty {_query = M.singleton "access_token" t}
 {-# INLINE token #-}
 
 
+-- | Request defining only App key
+key ∷ Text → Request a i r
+key s = mempty {_query = M.singleton "key" s}
+{-# INLINE key #-}
+
+
 -- | Request defining only API call site query parameter
 site ∷ Text → Request a i r
 site s = mempty {_query = M.singleton "site" s}
@@ -138,23 +142,50 @@ filter f = mempty {_query = M.singleton "filter" f}
 {-# INLINE filter #-}
 
 
--- | Request defining only App key
-key ∷ Text → Request a i r
-key s = mempty {_query = M.singleton "key" s}
-{-# INLINE key #-}
+-- | Request defining only API call state query parameter
+state ∷ Text → Request a i r
+state s = mempty {_query = M.singleton "state" s}
+{-# INLINE state #-}
 
 
-askSE ∷ Request a i r → IO (Either (ByteString, String) r)
-askSE q = do
-  let q' = def <> q
-  r ← C.withManager $ \m →
-    C.parseUrl (render q') >>= \url →
-      C.responseBody <$> C.httpLbs (url { C.method = toStrict . encodeUtf8 $ _method q' }) m
-  return $ maybe (Left (r, "libstackexchange.askSE: no parsing function registered")) ($ r) (_parse q')
+-- | Scope defines permission granted for application by user
+data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 
 
--- | Render Request as string for networking
-render ∷ Request a i r → String
-render r = T.unpack . mconcat $ [_host r, "/", _path r, "?", argie $ _query r]
+-- | Request defining only API call scope query parameter
+scope ∷ [Scope] → Request a i r
+scope ss = mempty {_query = M.singleton "scope" $ scopie ss}
  where
-  argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty
+  scopie xs = T.intercalate " " . flip map xs $ \case
+    ReadInbox   → "read_inbox"
+    NoExpiry    → "no_expiry"
+    WriteAccess → "write_access"
+    PrivateInfo → "private_info"
+
+
+-- | Request defining only Authentication API call application id
+--
+-- Primarily used in Authentication API call wrappers, not intended for usage by library user
+id ∷ Int → Request a i r
+id c = mempty {_query = M.singleton "client_id" (toLazyText $ decimal c)}
+
+
+-- | Request defining only Authentication API call redirect url
+--
+-- Primarily used in Authentication API call wrappers, not intended for usage by library user
+redirectURI ∷ Text → Request a i r
+redirectURI r = mempty {_query = M.singleton "redirect_uri" r}
+
+
+-- | Request defining only Authentication API call application secret
+--
+-- Primarily used in Authentication API call wrappers, not intended for usage by library user
+secret ∷ Text → Request a i r
+secret c = mempty {_query = M.singleton "client_secret" c}
+
+
+-- | Request defining only Authentication API call code
+--
+-- Primarily used in Authentication API call wrappers, not intended for usage by library user
+code ∷ Text → Request a i r
+code c = mempty {_query = M.singleton "code" c}

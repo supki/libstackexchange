@@ -3,22 +3,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
+import Data.List (intercalate)
 import Data.Monoid ((<>))
-import System.Exit (exitFailure)
 
 import Control.Lens
 
-import Network.StackExchange
+import Network.StackExchange hiding (filter)
 
 
 main ∷ IO ()
-main = do
-  askSE (badgesOnUsers [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA((") >>= \case
-    Right xs → do
-      let ranks = xs ^.. traverse . to unSE . field "rank" ∷ [String]
-          badgesCount = \τ → length . Prelude.filter (== τ)
-          golds = badgesCount "gold" ranks
-          silvers = badgesCount "silver" ranks
-          bronzes = badgesCount "bronze" ranks
-      putStrLn $ show golds ++ " " ++ show silvers ++ " " ++ show bronzes
-    _ → putStrLn "libse: FAIL" >> exitFailure
+main =
+  askSE (badgesOnUsers [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA((") >>= \xs →
+    (xs ^.. traverse . to unSE . field "rank") ^! act (putStrLn . intercalate " " . sequence (map f ["gold", "silver", "bronze"]))
+ where
+  f ∷ String → [String] → String
+  f t = show . length . filter (== t)
