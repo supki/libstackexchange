@@ -11,6 +11,7 @@ import           Data.ByteString.Lazy (ByteString)
 import           Control.Lens
 import qualified Data.Aeson as A
 import           Network.StackExchange.Response
+import           Network.StackExchange.Types
 import qualified Data.Attoparsec.Lazy as AP
 import           Test.HUnit
 
@@ -20,7 +21,7 @@ import TH (string)
 main ∷ IO ()
 main = do
   let AP.Done _ parsed = AP.parse A.json json
-  Counts { errors, failures } ← runTestTT (tests parsed)
+  Counts { errors, failures } ← runTestTT (tests $ SE parsed)
   if errors + failures == 0 then exitSuccess else exitFailure
 
 
@@ -39,7 +40,7 @@ json = [string|
 |]
 
 
-tests ∷ A.Value → Test
+tests ∷ SE a → Test
 tests = TestList . sequence
   [ testKeyLookup
   , testNestedKeyLookup

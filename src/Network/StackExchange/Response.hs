@@ -34,6 +34,7 @@ import           Data.Text.Lazy.Encoding (encodeUtf8)
 import qualified Network.HTTP.Conduit as C
 
 import Network.StackExchange.Request
+import Network.StackExchange.Types (SE(..))
 
 
 -- | StackExchange invalid response exception
@@ -73,8 +74,8 @@ aeson p = act $ A.parse p >>> \case
 
 
 -- | Select specific field in JSON
-field ∷ (Monad m, FromJSON a) ⇒ Text → Action m Value a
-field xs = aeson $ (.: xs) <=< parseJSON
+field ∷ (Monad m, FromJSON a) ⇒ Text → Action m (SE x) a
+field xs = aeson ((.: xs) <=< parseJSON . unSE)
 {-# INLINE field #-}
 
 

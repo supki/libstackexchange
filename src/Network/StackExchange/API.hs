@@ -644,4 +644,4 @@ attoparsec f msg request = case AP.eitherResult $ AP.parse A.json request of
 
 
 items ∷ (Functor m, Monad m) ⇒ Value → m [SE a]
-items s = map SE `fmap` (s ^! field "items")
+items s = (SE s ^! field "items")

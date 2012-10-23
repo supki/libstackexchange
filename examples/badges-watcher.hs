@@ -21,7 +21,7 @@ ask = askSE $ badgesOnUsers [972985] <> site "stackoverflow" <> key "Lhg6xe5d5Bv
 
 
 count ∷ SE Badge → (Sum Int, Sum Int, Sum Int)
-count (SE x) = (\l → set l (x ^. field "award_count" . to Sum) mempty) $
+count x = (\l → set l (x ^. field "award_count" . to Sum) mempty) $
   case x ^. field "rank" ∷ String of
     "bronze" → _1
     "silver" → _2
