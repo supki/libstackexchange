@@ -37,8 +37,8 @@ data Object =
   | Tag
   | TagScore
   | TagSynonym
-  | TagTop
   | TagWiki
+  | TopTag
   | User
   | UserNetwork
   | UserShallow

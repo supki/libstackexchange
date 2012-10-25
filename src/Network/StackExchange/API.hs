@@ -2,7 +2,70 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE ViewPatterns #-}
-module Network.StackExchange.API where
+module Network.StackExchange.API
+  ( -- * SE Answer
+    answers, answersByIds, answersOnUsers
+  , answersOnQuestions, topUserAnswersInTags
+    -- * SE Badge
+  , badges, badgesByIds, badgeRecipientsByIds
+  , badgesByName, badgeRecipients, badgesByTag
+  , badgesOnUsers
+    -- * SE Comment
+  , commentsOnAnswers, comments, commentsByIds
+  , commentsOnPosts, commentsOnQuestions
+  , commentsOnUsers, commentsByUsersToUser, mentionsOnUsers
+    -- * SE Error
+  , errors
+    -- * SE Filter
+  , createFilter, readFilter
+    -- * SE Info
+  , info
+    -- * SE UserNetwork
+  , associatedUsers
+    -- * SE AccountMerge
+  , mergeHistory
+    -- * SE Post
+  , posts, postsByIds
+    -- * SE Privilege
+  , privileges, privilegesOnUsers
+    -- * SE Question
+  , questions, questionsByIds, linkedQuestions, relatedQuestions
+  , featuredQuestions, unansweredQuestions, noAnswerQuestions
+  , search, advancedSearch, similar, faqsByTags, favoritesOnUsers
+  , questionsOnUsers, featuredQuestionsOnUsers, noAnswerQuestionsOnUsers
+  , unacceptedQuestionsOnUsers, unansweredQuestionsOnUsers
+  , topUserQuestionsInTags
+    -- * SE QuestionTimeline
+  , questionsTimeline
+    -- * SE Reputation
+  , reputationOnUsers
+    -- * SE ReputationHistory
+  , reputationHistory
+    -- * SE Revision
+  , revisionsByIds, revisionsByGuids
+    -- * SE Site
+  , sites
+    -- * SE SuggestedEdit
+  , postsOnSuggestedEdits, suggestedEdits, suggestedEditsByIds
+  , suggestedEditsOnUsers
+    -- * SE Tag
+  , tags, moderatorOnlyTags, requiredTags
+  , tagsByName, relatedTags, tagsOnUsers
+    -- * SE TagScore
+  , topAnswerersOnTag, topAskersOnTag
+    -- * SE TagSynonym
+  , tagSynonyms, synonymsByTags
+    -- * SE TagWiki
+  , wikisByTags
+    -- * SE TagTop
+  , topAnswerTagsOnUsers, topQuestionTagsOnUsers
+    -- * SE User
+  , users, usersByIds, moderators, electedModerators
+    -- * SE UserTimeline
+  , timelineOnUsers
+    -- * SE WritePermission
+  , writePermissions
+  ) where
 
 import Data.Monoid ((<>))
 
@@ -408,7 +471,7 @@ reputationOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 -------------------------
 
 -- | <https://api.stackexchange.com/docs/reputation-history>
-reputationHistory ∷ [Int] → Request a 52 [SE Reputation]
+reputationHistory ∷ [Int] → Request a 52 [SE ReputationHistory]
 reputationHistory (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/reputation-history") <>
   parse (attoparsec items ".users/{ids}/reputation-history: ")
@@ -518,24 +581,18 @@ tagsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 --------------------------
 -- Tag Scores
 --------------------------
-data Period = AllTime | Month
-
-topath ∷ Period → Text
-topath Month = "month"
-topath _     = "all_time"
-
 
 -- | <https://api.stackexchange.com/docs/top-answerers-on-tags>
-topAnswerersOnTag ∷ Text → Period → Request a 66 [SE TagScore]
+topAnswerersOnTag ∷ Text → Text → Request a 66 [SE TagScore]
 topAnswerersOnTag t p =
-  path ("tags/" <> t <> "/top-answerers/" <> (topath p)) <>
+  path ("tags/" <> t <> "/top-answerers/" <> p) <>
   parse (attoparsec items ".tags/{tag}/top-answerers/{period}: ")
 
 
 -- | <https://api.stackexchange.com/docs/top-askers-on-tags>
-topAskersOnTag ∷ Text → Period → Request a 67 [SE TagScore]
+topAskersOnTag ∷ Text → Text → Request a 67 [SE TagScore]
 topAskersOnTag t p =
-  path ("tags/" <> t <> "/top-askers/" <> (topath p)) <>
+  path ("tags/" <> t <> "/top-askers/" <> p) <>
   parse (attoparsec items ".tags/{tag}/top-askers/{period}: ")
 
 
@@ -572,14 +629,14 @@ wikisByTags (T.intercalate ";" → ts) =
 --------------------------
 
 -- | <https://api.stackexchange.com/docs/top-answer-tags-on-users>
-topAnswerTagsOnUsers ∷ Int → Request a 71 [SE TagTop]
+topAnswerTagsOnUsers ∷ Int → Request a 71 [SE TopTag]
 topAnswerTagsOnUsers (toLazyText . decimal → i) =
   path ("users/" <> i <> "/top-answer-tags") <>
   parse (attoparsec items ".users/{id}/top-answer-tags: ")
 
 
 -- | <https://api.stackexchange.com/docs/top-question-tags-on-users>
-topQuestionTagsOnUsers ∷ Int → Request a 72 [SE TagTop]
+topQuestionTagsOnUsers ∷ Int → Request a 72 [SE TopTag]
 topQuestionTagsOnUsers (toLazyText . decimal → i) =
   path ("users/" <> i <> "/top-question-tags") <>
   parse (attoparsec items ".users/{id}/top-question-tags: ")
@@ -629,8 +686,8 @@ timelineOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 --------------------------
 
 -- | <https://api.stackexchange.com/docs/write-permissions>
-writePermission ∷ Int → Request a 77 [SE WritePermission]
-writePermission (toLazyText . decimal → i) =
+writePermissions ∷ Int → Request a 77 [SE WritePermission]
+writePermissions (toLazyText . decimal → i) =
   path ("users/" <> i <> "/write-permissions") <>
   parse (attoparsec items ".users/{id}/write-permissions: ")
 
