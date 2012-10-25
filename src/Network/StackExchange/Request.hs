@@ -28,7 +28,7 @@ import           Data.Text.Lazy.Builder.Int (decimal)
 
 
 -- | Whether to use authentication at all. Currently isn't used
-data Auth = Yes | No
+data Auth = RequireToken | Ready
 
 
 -- | StackExchange API Request data type.
@@ -116,11 +116,9 @@ query q = mempty {_query = M.fromList q}
 {-# INLINE query #-}
 
 
--- | Request defining only API call access token
---
--- Primarily used in API call wrappers, not intended for usage by library user
-token ∷ Text → Request Yes i r
-token t = mempty {_query = M.singleton "access_token" t}
+-- | Convert token requiring Request into ready one
+token ∷ Text → Request RequireToken i r → Request Ready i r
+token t r = r {_query = M.insert "access_token" t (_query r)}
 {-# INLINE token #-}
 
 
@@ -168,6 +166,7 @@ scope ss = mempty {_query = M.singleton "scope" $ scopie ss}
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 id ∷ Int → Request a i r
 id c = mempty {_query = M.singleton "client_id" (toLazyText $ decimal c)}
+{-# INLINE id #-}
 
 
 -- | Request defining only Authentication API call redirect url
@@ -175,6 +174,7 @@ id c = mempty {_query = M.singleton "client_id" (toLazyText $ decimal c)}
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 redirectURI ∷ Text → Request a i r
 redirectURI r = mempty {_query = M.singleton "redirect_uri" r}
+{-# INLINE redirectURI #-}
 
 
 -- | Request defining only Authentication API call application secret
@@ -182,6 +182,7 @@ redirectURI r = mempty {_query = M.singleton "redirect_uri" r}
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 secret ∷ Text → Request a i r
 secret c = mempty {_query = M.singleton "client_secret" c}
+{-# INLINE secret #-}
 
 
 -- | Request defining only Authentication API call code
@@ -189,3 +190,4 @@ secret c = mempty {_query = M.singleton "client_secret" c}
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 code ∷ Text → Request a i r
 code c = mempty {_query = M.singleton "code" c}
+{-# INLINE code #-}

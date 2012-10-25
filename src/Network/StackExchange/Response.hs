@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -48,7 +49,7 @@ instance Exception SEException
 
 
 -- | Send Request and parse response
-askSE ∷ Request a i r → IO r
+askSE ∷ Request Ready i r → IO r
 askSE (mappend def → q@Request {_method, _parse}) = do
   r ← C.withManager $ \m → C.parseUrl (render q) >>= \url →
     C.responseBody <$> C.httpLbs (url {C.method = toStrict $ encodeUtf8 _method}) m
