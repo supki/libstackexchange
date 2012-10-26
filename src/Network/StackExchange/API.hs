@@ -57,14 +57,15 @@ module Network.StackExchange.API
   , tagSynonyms, synonymsByTags
     -- * SE TagWiki
   , wikisByTags
-    -- * SE TagTop
+    -- * SE TopTag
   , topAnswerTagsOnUsers, topQuestionTagsOnUsers
+  , meTopAnswerTags, meTopQuestionTags
     -- * SE User
-  , users, usersByIds, moderators, electedModerators
+  , users, usersByIds, me, moderators, electedModerators
     -- * SE UserTimeline
-  , timelineOnUsers
+  , timelineOnUsers, meTimeline
     -- * SE WritePermission
-  , writePermissions
+  , writePermissions, meWritePermissions
   ) where
 
 import Data.Monoid ((<>))
@@ -634,11 +635,21 @@ topAnswerTagsOnUsers (toLazyText . decimal → i) =
   parse (attoparsec items ".users/{id}/top-answer-tags: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-top-answer-tags>
+meTopAnswerTags ∷ Request RequireToken 81 [SE TopTag]
+meTopAnswerTags = path "me/top-answer-tags" <> parse (attoparsec items ".me/top-answer-tags: ")
+
+
 -- | <https://api.stackexchange.com/docs/top-question-tags-on-users>
 topQuestionTagsOnUsers ∷ Int → Request a 72 [SE TopTag]
 topQuestionTagsOnUsers (toLazyText . decimal → i) =
   path ("users/" <> i <> "/top-question-tags") <>
   parse (attoparsec items ".users/{id}/top-question-tags: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-top-question-tags>
+meTopQuestionTags ∷ Request RequireToken 82 [SE TopTag]
+meTopQuestionTags = path "me/top-question-tags" <> parse (attoparsec items ".me/top-question-tags: ")
 
 
 --------------------------
@@ -654,6 +665,11 @@ users = path "users" <> parse (attoparsec items ".users: ")
 usersByIds ∷ [Int] → Request a 8 [SE User]
 usersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is) <> parse (attoparsec items ".users/{ids}: ")
+
+
+-- | <https://api.stackexchange.com/docs/me>
+me ∷ Request RequireToken 78 (SE User)
+me = path "me" <> parse (head . attoparsec items ".me: ")
 
 
 -- | <https://api.stackexchange.com/docs/moderators>
@@ -680,6 +696,11 @@ timelineOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".users/{ids}/timeline: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-timeline>
+meTimeline ∷ Request RequireToken 79 [SE UserTimeline]
+meTimeline = path "me/timeline" <> parse (attoparsec items ".me/timeline: ")
+
+
 --------------------------
 -- Write Permissions
 --------------------------
@@ -689,6 +710,11 @@ writePermissions ∷ Int → Request a 77 [SE WritePermission]
 writePermissions (toLazyText . decimal → i) =
   path ("users/" <> i <> "/write-permissions") <>
   parse (attoparsec items ".users/{id}/write-permissions: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-write-permissions>
+meWritePermissions ∷ Request RequireToken 80 [SE WritePermission]
+meWritePermissions = path "me/write-permissions" <> parse (attoparsec items ".me/write-permissions: ")
 
 
 attoparsec ∷ (Value → Maybe b) → String → ByteString → b
