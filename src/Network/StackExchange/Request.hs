@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -6,7 +7,7 @@
 -- | StackExchange API request manipulation routines.
 module Network.StackExchange.Request
   ( -- * Type
-    Request(..), Auth(..)
+    Request(..), Auth(..), SE(..), Object(..)
     -- * Constructing requests
   , host, path, method, parse
   , query, token, key, site, filter, state, Scope(..), scope
@@ -18,6 +19,8 @@ import GHC.TypeLits
 import Prelude hiding (filter, id)
 
 import           Data.ByteString.Lazy (ByteString)
+import           Data.Aeson (FromJSON)
+import           Data.Aeson.Types (Value)
 import           Data.Default (Default(..))
 import           Data.Map (Map)
 import qualified Data.Map as M
@@ -31,6 +34,42 @@ import           Data.Text.Lazy.Builder.Int (decimal)
 data Auth = RequireToken | Ready
 
 
+-- | SE response type
+data Object =
+    AccessTokens -- ^ <https://api.stackexchange.com/docs/types/access-token>
+  | AccountMerge -- ^ <https://api.stackexchange.com/docs/types/account-merge>
+  | Answer -- ^ <https://api.stackexchange.com/docs/types/answer>
+  | Badge -- ^  <https://api.stackexchange.com/docs/types/badge>
+  | Comment -- ^ <https://api.stackexchange.com/docs/types/comment>
+  | Error -- ^ <https://api.stackexchange.com/docs/types/error>
+  | Event -- ^ <https://api.stackexchange.com/docs/types/event>
+  | Filter -- ^ <https://api.stackexchange.com/docs/types/filter>
+  | InboxItem -- ^ <https://api.stackexchange.com/docs/types/inbox-item>
+  | Info -- ^ <https://api.stackexchange.com/docs/types/info>
+  | NetworkUser -- ^ <https://api.stackexchange.com/docs/types/network-user>
+  | Notification -- ^ <https://api.stackexchange.com/docs/types/notification>
+  | Post -- ^ <https://api.stackexchange.com/docs/types/post>
+  | Privilege -- ^ <https://api.stackexchange.com/docs/types/privilege>
+  | Question -- ^ <https://api.stackexchange.com/docs/types/question>
+  | QuestionTimeline -- ^ <https://api.stackexchange.com/docs/types/question-timeline>
+  | Reputation -- ^ <https://api.stackexchange.com/docs/types/reputation>
+  | ReputationHistory -- ^ <https://api.stackexchange.com/docs/types/reputation-history>
+  | Revision -- ^ <https://api.stackexchange.com/docs/types/revision>
+  | Site -- ^ <https://api.stackexchange.com/docs/types/site>
+  | SuggestedEdit -- ^ <https://api.stackexchange.com/docs/types/suggested-edit>
+  | Tag -- ^ <https://api.stackexchange.com/docs/types/tag>
+  | TagScore -- ^ <https://api.stackexchange.com/docs/types/tag-score>
+  | TagSynonym -- ^ <https://api.stackexchange.com/docs/types/tag-synonym>
+  | TagWiki -- ^ <https://api.stackexchange.com/docs/types/tag-wiki>
+  | TopTag -- ^ <https://api.stackexchange.com/docs/types/top-tag>
+  | User -- ^ <https://api.stackexchange.com/docs/types/user>
+  | UserTimeline -- ^ <https://api.stackexchange.com/docs/types/user-timeline>
+  | WritePermission -- ^ <https://api.stackexchange.com/docs/types/write-permission>
+
+
+newtype SE (a ∷ Object) = SE { unSE ∷ Value } deriving (Show, FromJSON)
+
+
 -- | StackExchange API Request data type.
 --
 -- @a@ is a phantom type showing whether authentication is enabled
@@ -42,7 +81,7 @@ data Auth = RequireToken | Ready
 data Request (a ∷ Auth) (i ∷ Nat) r = Request
   { _host ∷ Text -- ^ API host link
   , _path ∷ Text -- ^ API call link
-  , _method ∷ Text
+  , _method ∷ Text -- ^ API call method (GET/POST)
   , _query ∷ Map Text Text -- ^ API call query parameters
   , _parse ∷ Maybe (ByteString → r) -- ^ API call result parsing function
   }

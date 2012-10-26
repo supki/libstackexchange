@@ -10,8 +10,8 @@ import System.Exit (exitFailure, exitSuccess)
 import           Data.ByteString.Lazy (ByteString)
 import           Control.Lens
 import qualified Data.Aeson as A
+import           Network.StackExchange.Request
 import           Network.StackExchange.Response
-import           Network.StackExchange.Types
 import qualified Data.Attoparsec.Lazy as AP
 import           Test.HUnit
 

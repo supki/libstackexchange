@@ -35,7 +35,6 @@ import           Data.Text.Lazy.Encoding (encodeUtf8)
 import qualified Network.HTTP.Conduit as C
 
 import Network.StackExchange.Request
-import Network.StackExchange.Types (SE(..))
 
 
 -- | StackExchange invalid response exception

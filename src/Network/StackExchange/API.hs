@@ -82,7 +82,6 @@ import           Data.Text.Lazy.Builder.Int (decimal)
 
 import Network.StackExchange.Response
 import Network.StackExchange.Request
-import Network.StackExchange.Types
 
 --------------------------
 -- Answers
@@ -269,7 +268,7 @@ info = path "info" <> parse (attoparsec (return . SE) ".info: ")
 --------------------------
 
 -- | <https://api.stackexchange.com/docs/associated-users>
-associatedUsers ∷ [Int] → Request a 26 [SE UserNetwork]
+associatedUsers ∷ [Int] → Request a 26 [SE NetworkUser]
 associatedUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/associated") <>
   parse (attoparsec items ".users/{ids}/associated: ")

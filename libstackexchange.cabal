@@ -29,7 +29,6 @@ library
                    Network.StackExchange.Auth
                    Network.StackExchange.Request
                    Network.StackExchange.Response
-                   Network.StackExchange.Types
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 
