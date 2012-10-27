@@ -33,13 +33,14 @@ module Network.StackExchange.API
   , questions, questionsByIds, linkedQuestions, relatedQuestions
   , featuredQuestions, unansweredQuestions, noAnswerQuestions
   , search, advancedSearch, similar, faqsByTags, favoritesOnUsers
-  , questionsOnUsers, featuredQuestionsOnUsers, noAnswerQuestionsOnUsers
-  , unacceptedQuestionsOnUsers, unansweredQuestionsOnUsers
-  , topUserQuestionsInTags
+  , meFavorites, questionsOnUsers, meQuestions, featuredQuestionsOnUsers
+  , meFeaturedQuestions, noAnswerQuestionsOnUsers, meNoAnswerQuestions
+  , unacceptedQuestionsOnUsers, meUnacceptedQuestions, unansweredQuestionsOnUsers
+  , meUnansweredQuestions, topUserQuestionsInTags, meTagsTopQuestions
     -- * SE QuestionTimeline
   , questionsTimeline
     -- * SE Reputation
-  , reputationOnUsers
+  , reputationOnUsers, meReputation
     -- * SE ReputationHistory
   , reputationHistory, reputationHistoryFull
   , meReputationHistory, meReputationHistoryFull
@@ -404,11 +405,21 @@ favoritesOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".users/{ids}/favorites: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-favorites>
+meFavorites ∷ Request RequireToken __COUNTER__ [SE Question]
+meFavorites = path "me/favorites" <> parse (attoparsec items ".me/favorites: ")
+
+
 -- | <https://api.stackexchange.com/docs/questions-on-users>
 questionsOnUsers ∷ [Int] → Request a __COUNTER__ [SE Question]
 questionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/questions") <>
   parse (attoparsec items ".users/{ids}/questions: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-questions>
+meQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
+meQuestions = path "me/questions" <> parse (attoparsec items ".me/questions: ")
 
 
 -- | <https://api.stackexchange.com/docs/featured-questions-on-users>
@@ -418,11 +429,21 @@ featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is)
   parse (attoparsec items ".users/{ids}/questions/featured: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-featured-questions>
+meFeaturedQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
+meFeaturedQuestions = path ("me/questions/featured") <> parse (attoparsec items ".me/questions/featured: ")
+
+
 -- | <https://api.stackexchange.com/docs/no-answer-questions-on-users>
 noAnswerQuestionsOnUsers ∷ [Int] → Request a __COUNTER__ [SE Question]
 noAnswerQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/questions/no-answers") <>
   parse (attoparsec items ".users/{ids}/questions/no-answers: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-no-answer-questions>
+meNoAnswerQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
+meNoAnswerQuestions = path ("me/questions/no-answers") <> parse (attoparsec items ".me/questions/no-answers: ")
 
 
 -- | <https://api.stackexchange.com/docs/unaccepted-questions-on-users>
@@ -432,6 +453,11 @@ unacceptedQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
   parse (attoparsec items ".users/{ids}/questions/unaccepted: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-unaccepted-questions>
+meUnacceptedQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
+meUnacceptedQuestions = path ("me/questions/unaccepted") <> parse (attoparsec items ".me/questions/unaccepted: ")
+
+
 -- | <https://api.stackexchange.com/docs/unanswered-questions-on-users>
 unansweredQuestionsOnUsers ∷ [Int] → Request a __COUNTER__ [SE Question]
 unansweredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -439,11 +465,23 @@ unansweredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
   parse (attoparsec items ".users/{ids}/questions/unanswered: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-unanswered-questions>
+meUnansweredQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
+meUnansweredQuestions = path ("me/questions/unanswered") <> parse (attoparsec items ".me/questions/unanswered: ")
+
+
 -- | <https://api.stackexchange.com/docs/top-user-questions-in-tags>
 topUserQuestionsInTags ∷ Int → [Text] → Request a __COUNTER__ [SE Question]
 topUserQuestionsInTags ((toLazyText . decimal) → i) (T.intercalate ";" → ts) =
   path ("users/" <> i <> "/tags/" <> ts <> "/top-questions") <>
     parse (attoparsec items ".users/{id}/tags/{tags}/top-questions: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-tags-top-questions>
+meTagsTopQuestions ∷ [Text] → Request RequireToken __COUNTER__ [SE Question]
+meTagsTopQuestions (T.intercalate ";" → ts) =
+  path ("me/tags/" <> ts <> "/top-questions") <>
+  parse (attoparsec items ".me/tags/{tags}/top-questions: ")
 
 
 --------------------------
@@ -468,6 +506,11 @@ reputationOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".users/{ids}/reputation: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-reputation>
+meReputation ∷ Request RequireToken __COUNTER__ [SE Reputation]
+meReputation = path "me/reputation" <> parse (attoparsec items ".me/reputation: ")
+
+
 --------------------------
 -- Reputation History
 -------------------------
@@ -480,19 +523,19 @@ reputationHistory (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- | <https://api.stackexchange.com/docs/me-reputation-history>
-meReputationHistory ∷ Request a __COUNTER__ [SE ReputationHistory]
+meReputationHistory ∷ Request RequireToken __COUNTER__ [SE ReputationHistory]
 meReputationHistory = path ("me/reputation-history") <> parse (attoparsec items ".me/reputation-history: ")
 
 
 -- | <https://api.stackexchange.com/docs/full-reputation-history>
-reputationHistoryFull ∷ [Int] → Request a __COUNTER__ [SE ReputationHistory]
+reputationHistoryFull ∷ [Int] → Request RequireToken __COUNTER__ [SE ReputationHistory]
 reputationHistoryFull (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/reputation-history/full") <>
   parse (attoparsec items ".users/{ids}/reputation-history/full: ")
 
 
 -- | <https://api.stackexchange.com/docs/me-full-reputation-history>
-meReputationHistoryFull ∷ Request a __COUNTER__ [SE ReputationHistory]
+meReputationHistoryFull ∷ Request RequireToken __COUNTER__ [SE ReputationHistory]
 meReputationHistoryFull = path ("me/reputation-history/full") <> parse (attoparsec items ".me/reputation-history/full: ")
 
 
@@ -555,7 +598,7 @@ suggestedEditsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- | <https://api.stackexchange.com/docs/me-suggested-edits>
-meSuggestedEdits ∷ Request a __COUNTER__ [SE SuggestedEdit]
+meSuggestedEdits ∷ Request RequireToken __COUNTER__ [SE SuggestedEdit]
 meSuggestedEdits = path ("me/suggested-edits") <> parse (attoparsec items ".me/suggested-edits: ")
 
 
@@ -603,7 +646,7 @@ tagsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- | <https://api.stackexchange.com/docs/me-tags>
-meTags ∷ Request a __COUNTER__ [SE Tag]
+meTags ∷ Request RequireToken __COUNTER__ [SE Tag]
 meTags = path ("me/tags") <> parse (attoparsec items ".me/tags: ")
 
 
