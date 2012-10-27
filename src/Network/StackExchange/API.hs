@@ -21,14 +21,16 @@ module Network.StackExchange.API
   , createFilter, readFilter
     -- * SE Info
   , info
-    -- * SE UserNetwork
+    -- * SE NetworkUser
   , associatedUsers
     -- * SE AccountMerge
   , mergeHistory
+    -- * SE Notification
+  , notifications, notificationsUnread
     -- * SE Post
   , posts, postsByIds
     -- * SE Privilege
-  , privileges, privilegesOnUsers
+  , privileges, privilegesOnUsers, mePriviledges
     -- * SE Question
   , questions, questionsByIds, linkedQuestions, relatedQuestions
   , featuredQuestions, unansweredQuestions, noAnswerQuestions
@@ -288,6 +290,18 @@ mergeHistory (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/merges") <>
   parse (attoparsec items ".users/{ids}/merges: ")
 
+--------------------------
+-- Notifications
+--------------------------
+
+-- | <https://api.stackexchange.com/docs/notifications>
+notifications ∷ Request RequireToken __COUNTER__ [SE Notification]
+notifications = path ("notifications") <> parse (attoparsec items ".notifications: ")
+
+-- | <https://api.stackexchange.com/docs/notifications-unread>
+notificationsUnread ∷ Request RequireToken __COUNTER__ [SE Notification]
+notificationsUnread = path ("notifications/unread") <> parse (attoparsec items ".notifications/unread: ")
+
 
 --------------------------
 -- Posts
@@ -318,6 +332,11 @@ privilegesOnUsers ∷ Int → Request a __COUNTER__ [SE Privilege]
 privilegesOnUsers ((toLazyText . decimal) → i) =
   path ("users/" <> i <> "/privileges") <>
   parse (attoparsec items ".users/{ids}/privileges: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-privileges>
+mePriviledges ∷ Request RequireToken __COUNTER__ [SE Privilege]
+mePriviledges = path "me/privileges" <> parse (attoparsec items ".me/privileges: ")
 
 
 --------------------------

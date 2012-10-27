@@ -193,7 +193,7 @@ data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 scope ∷ [Scope] → Request a i r
 scope ss = mempty {_query = M.singleton "scope" $ scopie ss}
  where
-  scopie xs = T.intercalate " " . flip map xs $ \case
+  scopie xs = T.intercalate "," . flip map xs $ \case
     ReadInbox   → "read_inbox"
     NoExpiry    → "no_expiry"
     WriteAccess → "write_access"
