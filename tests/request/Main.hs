@@ -5,7 +5,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main (main) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative ((<$>), (<*>), liftA2)
 import Data.Monoid ((<>), mempty)
 import System.Exit (exitFailure, exitSuccess)
 
@@ -13,8 +13,9 @@ import           Data.Map (Map)
 import qualified Data.Map as M
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import           Network.StackExchange.Request
+import           Network.StackExchange.Request hiding (id)
 import           Test.QuickCheck
+import           Test.QuickCheck.Function
 
 
 instance Show (a → b) where
@@ -60,16 +61,26 @@ prop_idempotent ∷ Request a i r → Bool
 prop_idempotent x = x <> x == x
 
 
+prop_functor_id ∷ Request a i r → Bool
+prop_functor_id x = fmap id x == x
+
+
+prop_functor_composition ∷ Fun Char Int → Fun Int Char → Request a i Char → Bool
+prop_functor_composition (Fun _ f) (Fun _ g) = liftA2 (==) (fmap (g . f)) (fmap g . fmap f)
+
+
 main ∷ IO ()
-main = (,,,) <$>
+main = (,,,,,) <$>
   (check prop_right_id) <*>
   (check prop_left_id) <*>
   (check prop_associative) <*>
-  (check prop_idempotent) >>= \case
-  (True,True,True,True) → exitSuccess
-  _                     → exitFailure
+  (check prop_idempotent) <*>
+  (check prop_functor_id) <*>
+  (check prop_functor_composition) >>= \case
+  (True,True,True,True,True,True) → exitSuccess
+  _                               → exitFailure
  where
-  check p = success <$> quickCheckWithResult (stdArgs {maxSuccess = 300}) p
+  check p = success <$> quickCheckResult p
 
   success (Success {}) = True
   success _ = False

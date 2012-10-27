@@ -105,6 +105,12 @@ instance Monoid (Request a i r) where
     }
 
 
+-- | Useful if what's needed is immediate result parse
+instance Functor (Request a i) where
+  fmap f r = r {_parse = fmap (f .) (_parse r)}
+  {-# INLINE fmap #-}
+
+
 -- | Default StackExchange API request, defines only host link
 instance Default (Request a i r) where
   def = mempty {_host = "https://api.stackexchange.com/2.1", _method = "GET"}
