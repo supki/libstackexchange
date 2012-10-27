@@ -13,7 +13,7 @@ import           Data.Map (Map)
 import qualified Data.Map as M
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
-import           Network.StackExchange.Request hiding (id)
+import           Network.StackExchange.Request
 import           Test.QuickCheck
 import           Test.QuickCheck.Function
 

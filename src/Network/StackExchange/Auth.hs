@@ -1,16 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
+-- | StackExchange authentication helpers
 module Network.StackExchange.Auth
   ( -- * Authentication related routines
     askPermission, accessToken
-    -- * Authentication customization
-  , state, Scope(..), scope
   ) where
 
 import Control.Applicative ((<$>), (*>))
 import Control.Exception (throw)
 import Data.Monoid ((<>), mconcat)
-import Prelude hiding (id)
 
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
@@ -21,14 +19,16 @@ import Network.StackExchange.Response
 import Network.StackExchange.Request
 
 
+-- | Construct URI at which user should approve app
 askPermission ∷ Int → Text → Request a i r
-askPermission c r = host "https://stackexchange.com/oauth" <> id c <> redirectURI r
+askPermission c r = host "https://stackexchange.com/oauth" <> client c <> redirectURI r
 
 
+-- | Request access_token from StackExchange
 accessToken ∷ Int → Text → Text → Text → Request a i Text
 accessToken c s c' r = mconcat
   [ host "https://stackexchange.com/oauth/access_token"
-  , id c
+  , client c
   , secret s
   , code c'
   , redirectURI r

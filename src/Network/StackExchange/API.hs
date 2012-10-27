@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE ViewPatterns #-}
+-- | API methods list
 module Network.StackExchange.API
   ( -- * SE Answer
     answers, answersByIds, answersOnUsers
