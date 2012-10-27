@@ -40,17 +40,18 @@ module Network.StackExchange.API
     -- * SE Reputation
   , reputationOnUsers
     -- * SE ReputationHistory
-  , reputationHistory
+  , reputationHistory, reputationHistoryFull
+  , meReputationHistory, meReputationHistoryFull
     -- * SE Revision
   , revisionsByIds, revisionsByGuids
     -- * SE Site
   , sites
     -- * SE SuggestedEdit
   , postsOnSuggestedEdits, suggestedEdits, suggestedEditsByIds
-  , suggestedEditsOnUsers
+  , suggestedEditsOnUsers, meSuggestedEdits
     -- * SE Tag
   , tags, moderatorOnlyTags, requiredTags
-  , tagsByName, relatedTags, tagsOnUsers
+  , tagsByName, relatedTags, tagsOnUsers, meTags
     -- * SE TagScore
   , topAnswerersOnTag, topAskersOnTag
     -- * SE TagSynonym
@@ -477,6 +478,23 @@ reputationHistory (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".users/{ids}/reputation-history: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-reputation-history>
+meReputationHistory ∷ Request a 86 [SE ReputationHistory]
+meReputationHistory = path ("me/reputation-history") <> parse (attoparsec items ".me/reputation-history: ")
+
+
+-- | <https://api.stackexchange.com/docs/full-reputation-history>
+reputationHistoryFull ∷ [Int] → Request a 87 [SE ReputationHistory]
+reputationHistoryFull (T.intercalate ";" . map (toLazyText . decimal) → is) =
+  path ("users/" <> is <> "/reputation-history/full") <>
+  parse (attoparsec items ".users/{ids}/reputation-history/full: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-full-reputation-history>
+meReputationHistoryFull ∷ Request a 85 [SE ReputationHistory]
+meReputationHistoryFull = path ("me/reputation-history/full") <> parse (attoparsec items ".me/reputation-history/full: ")
+
+
 --------------------------
 -- Revisions
 --------------------------
@@ -535,6 +553,11 @@ suggestedEditsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".users/{ids}/suggested-edits: ")
 
 
+-- | <https://api.stackexchange.com/docs/me-suggested-edits>
+meSuggestedEdits ∷ Request a 84 [SE SuggestedEdit]
+meSuggestedEdits = path ("me/suggested-edits") <> parse (attoparsec items ".me/suggested-edits: ")
+
+
 --------------------------
 -- Tags
 --------------------------
@@ -576,6 +599,11 @@ tagsOnUsers ∷ [Int] → Request a 65 [SE Tag]
 tagsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/tags") <>
   parse (attoparsec items ".users/{ids}/tags: ")
+
+
+-- | <https://api.stackexchange.com/docs/me-tags>
+meTags ∷ Request a 83 [SE Tag]
+meTags = path ("me/tags") <> parse (attoparsec items ".me/tags: ")
 
 
 --------------------------
