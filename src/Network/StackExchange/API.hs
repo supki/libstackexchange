@@ -216,17 +216,17 @@ comments = path "comments" <> parse (attoparsec items ".comments: ")
 
 
 -- | <https://api.stackexchange.com/docs/delete-comment>
-deleteComment ∷ Int → Request RequireToken __COUNTER__ [SE Comment]
+deleteComment ∷ Int → Request RequireToken __COUNTER__ ()
 deleteComment ((toLazyText . decimal) → i) =
-  path ("comments/" <> i <> "/delete") <>
-  parse (attoparsec items ".comments/{id}/delete:")
+  path ("comments/" <> i <> "/delete")
 
 
 -- | <https://api.stackexchange.com/docs/edit-comment>
-editComment ∷ Int → Request RequireToken __COUNTER__ [SE Comment]
-editComment ((toLazyText . decimal) → i) =
+editComment ∷ Int → Text → Request RequireToken __COUNTER__ (SE Comment)
+editComment ((toLazyText . decimal) → i) body =
   path ("comments/" <> i <> "/edit") <>
-  parse (attoparsec items ".comments/{id}/edit:")
+  query [("body", body)] <>
+  parse (attoparsec (return . SE) ".comments/{id}/edit:")
 
 
 -- | <https://api.stackexchange.com/docs/comments-by-ids>
@@ -243,10 +243,11 @@ commentsOnPosts (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- | <https://api.stackexchange.com/docs/create-comment>
-createComment ∷ Int → Request RequireToken __COUNTER__ [SE Comment]
-createComment ((toLazyText . decimal) → i) =
+createComment ∷ Int → Text → Request RequireToken __COUNTER__ (SE Comment)
+createComment ((toLazyText . decimal) → i) body =
   path ("posts/" <> i <> "/comments/add") <>
-  parse (attoparsec items ".posts/{id}/comments/add:")
+  query [("body", body)] <>
+  parse (attoparsec (return . SE) ".posts/{id}/comments/add:")
 
 
 -- | <https://api.stackexchange.com/docs/comments-on-questions>
