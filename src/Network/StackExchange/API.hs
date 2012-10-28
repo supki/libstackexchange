@@ -5,8 +5,10 @@
 {-# LANGUAGE ViewPatterns #-}
 -- | API methods list
 module Network.StackExchange.API
-  ( -- * SE Answer
-    answers, answersByIds, answersOnUsers
+  ( -- * SE AccessToken
+    readAccessTokens, invalidateAccessTokens, applicationDeAuthenticate
+    -- * SE Answer
+  , answers, answersByIds, answersOnUsers
   , answersOnQuestions, meAnswers, topUserAnswersInTags, meTagsTopAnswers
     -- * SE Badge
   , badges, badgesByIds, badgeRecipientsByIds
@@ -95,6 +97,31 @@ import           Data.Text.Lazy.Builder.Int (decimal)
 
 import Network.StackExchange.Response
 import Network.StackExchange.Request
+
+--------------------------
+-- Access Tokens
+--------------------------
+
+-- | <https://api.stackexchange.com/docs/invalidate-access-tokens>
+invalidateAccessTokens ∷ [Text] → Request a __COUNTER__ [SE AccessToken]
+invalidateAccessTokens (T.intercalate ";" → ts) =
+  path ("access-tokens/" <> ts <> "/invalidate") <>
+  parse (attoparsec items ".access-tokens/{accessTokens}/invalidate: ")
+
+
+-- | <https://api.stackexchange.com/docs/read-access-tokens>
+readAccessTokens ∷ [Text] → Request a __COUNTER__ [SE AccessToken]
+readAccessTokens (T.intercalate ";" → ts) =
+  path ("access-tokens/" <> ts) <>
+  parse (attoparsec items ".access-tokens/{accessTokens}: ")
+
+
+-- | <https://api.stackexchange.com/docs/application-de-authenticate>
+applicationDeAuthenticate ∷ [Text] → Request a __COUNTER__ [SE AccessToken]
+applicationDeAuthenticate (T.intercalate ";" → ts) =
+  path ("apps/" <> ts <> "/de-authenticate") <>
+  parse (attoparsec items ".apps/{accessTokens}/de-authenticate: ")
+
 
 --------------------------
 -- Answers

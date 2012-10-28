@@ -39,7 +39,7 @@ data Auth = RequireToken | Ready
 
 -- | SE response type
 data Object =
-    AccessTokens -- ^ <https://api.stackexchange.com/docs/types/access-token>
+    AccessToken -- ^ <https://api.stackexchange.com/docs/types/access-token>
   | AccountMerge -- ^ <https://api.stackexchange.com/docs/types/account-merge>
   | Answer -- ^ <https://api.stackexchange.com/docs/types/answer>
   | Badge -- ^  <https://api.stackexchange.com/docs/types/badge>
