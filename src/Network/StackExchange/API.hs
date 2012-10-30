@@ -355,10 +355,9 @@ createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) bas
 
 -- | <https://api.stackexchange.com/docs/read-filter>
 readFilter ∷ [Text] → Request a __COUNTER__ [SE Filter]
-readFilter (T.intercalate ";" → filters) =
-  path "filters" <>
-  query [("filters", filters)] <>
-  parse (attoparsec items ".filters: ")
+readFilter (T.intercalate ";" → fs) =
+  path ("filters/" <> fs) <>
+  parse (attoparsec items ".filters/{filters}: ")
 
 
 --------------------------
