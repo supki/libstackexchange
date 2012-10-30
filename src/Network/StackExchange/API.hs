@@ -155,7 +155,7 @@ answersOnQuestions (T.intercalate ";" . map (toLazyText . decimal) → is) =
 -- | <https://api.stackexchange.com/docs/me-answers>
 meAnswers ∷ Request RequireToken __COUNTER__ [SE Answer]
 meAnswers =
-  path ("me/answers") <> parse (attoparsec items ".me/answers: ")
+  path "me/answers" <> parse (attoparsec items ".me/answers: ")
 
 
 -- | <https://api.stackexchange.com/docs/top-user-answers-in-tags>
@@ -244,13 +244,13 @@ comments = path "comments" <> parse (attoparsec items ".comments: ")
 
 -- | <https://api.stackexchange.com/docs/delete-comment>
 deleteComment ∷ Int → Request RequireToken __COUNTER__ ()
-deleteComment ((toLazyText . decimal) → i) =
+deleteComment (toLazyText . decimal → i) =
   path ("comments/" <> i <> "/delete")
 
 
 -- | <https://api.stackexchange.com/docs/edit-comment>
 editComment ∷ Int → Text → Request RequireToken __COUNTER__ (SE Comment)
-editComment ((toLazyText . decimal) → i) body =
+editComment (toLazyText . decimal → i) body =
   path ("comments/" <> i <> "/edit") <>
   query [("body", body)] <>
   parse (attoparsec (return . SE) ".comments/{id}/edit:")
@@ -271,7 +271,7 @@ commentsOnPosts (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 -- | <https://api.stackexchange.com/docs/create-comment>
 createComment ∷ Int → Text → Request RequireToken __COUNTER__ (SE Comment)
-createComment ((toLazyText . decimal) → i) body =
+createComment (toLazyText . decimal → i) body =
   path ("posts/" <> i <> "/comments/add") <>
   query [("body", body)] <>
   parse (attoparsec (return . SE) ".posts/{id}/comments/add:")
@@ -299,14 +299,14 @@ meComments = path "me/comments" <> parse (attoparsec items ".me/comments: ")
 -- | <https://api.stackexchange.com/docs/comments-by-users-to-user>
 commentsByUsersToUser ∷ [Int] → Int → Request a __COUNTER__ [SE Comment]
 commentsByUsersToUser (T.intercalate ";" . map (toLazyText . decimal) → is)
-                      ((toLazyText . decimal) → toid) =
+                      (toLazyText . decimal → toid) =
   path ("users/" <> is <> "/comments/" <> toid) <>
   parse (attoparsec items ".users/{ids}/comments/{toid}: ")
 
 
 -- | <https://api.stackexchange.com/docs/me-comments-to>
 meCommentsTo ∷ Int → Request RequireToken __COUNTER__ [SE Comment]
-meCommentsTo ((toLazyText . decimal) → toid) =
+meCommentsTo (toLazyText . decimal → toid) =
   path ("me/comments/" <> toid) <>
   parse (attoparsec items ".me/comments/{toid}:")
 
@@ -367,20 +367,20 @@ readFilter (T.intercalate ";" → fs) =
 -- | <https://api.stackexchange.com/docs/inbox>
 inbox ∷ Request RequireToken __COUNTER__ [SE InboxItem]
 inbox =
-  path ("inbox") <>
+  path "inbox" <>
   parse (attoparsec items ".inbox: ")
 
 
 -- | <https://api.stackexchange.com/docs/inbox-unread>
 inboxUnread ∷ Request RequireToken __COUNTER__ [SE InboxItem]
 inboxUnread =
-  path ("inbox/unread") <>
+  path "inbox/unread" <>
   parse (attoparsec items ".inbox/unread: ")
 
 
 -- | <https://api.stackexchange.com/docs/user-inbox>
 userInbox ∷ Int → Request RequireToken __COUNTER__ [SE InboxItem]
-userInbox ((toLazyText . decimal) → i) =
+userInbox (toLazyText . decimal → i) =
   path ("users/" <> i <> "/inbox") <>
   parse (attoparsec items ".users/{id}/inbox: ")
 
@@ -388,13 +388,13 @@ userInbox ((toLazyText . decimal) → i) =
 -- | <https://api.stackexchange.com/docs/me-inbox>
 meInbox ∷ Request RequireToken __COUNTER__ [SE InboxItem]
 meInbox =
-  path ("me/inbox") <>
+  path "me/inbox" <>
   parse (attoparsec items ".me/inbox: ")
 
 
 -- | <https://api.stackexchange.com/docs/user-unread-inbox>
 userUnreadInbox ∷ Int → Request RequireToken __COUNTER__ [SE InboxItem]
-userUnreadInbox ((toLazyText . decimal) → i) =
+userUnreadInbox (toLazyText . decimal → i) =
   path ("users/" <> i <> "/inbox/unread") <>
   parse (attoparsec items ".users/{id}/inbox/unread: ")
 
@@ -402,7 +402,7 @@ userUnreadInbox ((toLazyText . decimal) → i) =
 -- | <https://api.stackexchange.com/docs/me-unread-inbox>
 meUnreadInbox ∷ Request RequireToken __COUNTER__ [SE InboxItem]
 meUnreadInbox =
-  path ("me/inbox/unread") <>
+  path "me/inbox/unread" <>
   parse (attoparsec items ".me/inbox/unread: ")
 
 
@@ -429,7 +429,7 @@ associatedUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 -- | <https://api.stackexchange.com/docs/me-associated-users>
 meAssociatedUsers ∷ Request RequireToken __COUNTER__ [SE NetworkUser]
 meAssociatedUsers =
-  path ("me/associated") <>
+  path "me/associated" <>
   parse (attoparsec items ".me/associated: ")
 
 
@@ -447,7 +447,7 @@ mergeHistory (T.intercalate ";" . map (toLazyText . decimal) → is) =
 -- | <https://api.stackexchange.com/docs/me-merge-history>
 meMergeHistory ∷ Request RequireToken __COUNTER__ [SE AccountMerge]
 meMergeHistory =
-  path ("me/merges") <>
+  path "me/merges" <>
   parse (attoparsec items ".me/merges: ")
 
 
@@ -457,16 +457,16 @@ meMergeHistory =
 
 -- | <https://api.stackexchange.com/docs/notifications>
 notifications ∷ Request RequireToken __COUNTER__ [SE Notification]
-notifications = path ("notifications") <> parse (attoparsec items ".notifications: ")
+notifications = path "notifications" <> parse (attoparsec items ".notifications: ")
 
 -- | <https://api.stackexchange.com/docs/notifications-unread>
 notificationsUnread ∷ Request RequireToken __COUNTER__ [SE Notification]
-notificationsUnread = path ("notifications/unread") <> parse (attoparsec items ".notifications/unread: ")
+notificationsUnread = path "notifications/unread" <> parse (attoparsec items ".notifications/unread: ")
 
 
 -- | <https://api.stackexchange.com/docs/user-notifications>
 userNotifications ∷ Int → Request RequireToken __COUNTER__ [SE Notification]
-userNotifications ((toLazyText . decimal) → i) =
+userNotifications (toLazyText . decimal → i) =
   path ("users/" <> i <> "/notifications") <>
   parse (attoparsec items ".users/{id}/notifications: ")
 
@@ -474,13 +474,13 @@ userNotifications ((toLazyText . decimal) → i) =
 -- | <https://api.stackexchange.com/docs/me-notifications>
 meNotifications ∷ Request RequireToken __COUNTER__ [SE Notification]
 meNotifications =
-  path ("me/notifications") <>
+  path "me/notifications" <>
   parse (attoparsec items ".me/notifications: ")
 
 
 -- | <https://api.stackexchange.com/docs/user-unread-notifications>
 userUnreadNotifications ∷ Int → Request RequireToken __COUNTER__ [SE Notification]
-userUnreadNotifications ((toLazyText . decimal) → i) =
+userUnreadNotifications (toLazyText . decimal → i) =
   path ("users/" <> i <> "/notifications/unread") <>
   parse (attoparsec items ".users/{id}/notifications/unread: ")
 
@@ -488,7 +488,7 @@ userUnreadNotifications ((toLazyText . decimal) → i) =
 -- | <https://api.stackexchange.com/docs/me-unread-notifications>
 meUnreadNotifications ∷ Request RequireToken __COUNTER__ [SE Notification]
 meUnreadNotifications =
-  path ("me/notifications") <>
+  path "me/notifications" <>
   parse (attoparsec items ".me/notifications/unread: ")
 
 
@@ -518,7 +518,7 @@ privileges = path "privileges" <> parse (attoparsec items ".privileges: ")
 
 -- | <https://api.stackexchange.com/docs/privileges-on-users>
 privilegesOnUsers ∷ Int → Request a __COUNTER__ [SE Privilege]
-privilegesOnUsers ((toLazyText . decimal) → i) =
+privilegesOnUsers (toLazyText . decimal → i) =
   path ("users/" <> i <> "/privileges") <>
   parse (attoparsec items ".users/{ids}/privileges: ")
 
@@ -639,7 +639,7 @@ featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is)
 
 -- | <https://api.stackexchange.com/docs/me-featured-questions>
 meFeaturedQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
-meFeaturedQuestions = path ("me/questions/featured") <> parse (attoparsec items ".me/questions/featured: ")
+meFeaturedQuestions = path "me/questions/featured" <> parse (attoparsec items ".me/questions/featured: ")
 
 
 -- | <https://api.stackexchange.com/docs/no-answer-questions-on-users>
@@ -651,7 +651,7 @@ noAnswerQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is)
 
 -- | <https://api.stackexchange.com/docs/me-no-answer-questions>
 meNoAnswerQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
-meNoAnswerQuestions = path ("me/questions/no-answers") <> parse (attoparsec items ".me/questions/no-answers: ")
+meNoAnswerQuestions = path "me/questions/no-answers" <> parse (attoparsec items ".me/questions/no-answers: ")
 
 
 -- | <https://api.stackexchange.com/docs/unaccepted-questions-on-users>
@@ -663,7 +663,7 @@ unacceptedQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
 
 -- | <https://api.stackexchange.com/docs/me-unaccepted-questions>
 meUnacceptedQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
-meUnacceptedQuestions = path ("me/questions/unaccepted") <> parse (attoparsec items ".me/questions/unaccepted: ")
+meUnacceptedQuestions = path "me/questions/unaccepted" <> parse (attoparsec items ".me/questions/unaccepted: ")
 
 
 -- | <https://api.stackexchange.com/docs/unanswered-questions-on-users>
@@ -675,12 +675,12 @@ unansweredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
 
 -- | <https://api.stackexchange.com/docs/me-unanswered-questions>
 meUnansweredQuestions ∷ Request RequireToken __COUNTER__ [SE Question]
-meUnansweredQuestions = path ("me/questions/unanswered") <> parse (attoparsec items ".me/questions/unanswered: ")
+meUnansweredQuestions = path "me/questions/unanswered" <> parse (attoparsec items ".me/questions/unanswered: ")
 
 
 -- | <https://api.stackexchange.com/docs/top-user-questions-in-tags>
 topUserQuestionsInTags ∷ Int → [Text] → Request a __COUNTER__ [SE Question]
-topUserQuestionsInTags ((toLazyText . decimal) → i) (T.intercalate ";" → ts) =
+topUserQuestionsInTags (toLazyText . decimal → i) (T.intercalate ";" → ts) =
   path ("users/" <> i <> "/tags/" <> ts <> "/top-questions") <>
     parse (attoparsec items ".users/{id}/tags/{tags}/top-questions: ")
 
@@ -732,7 +732,9 @@ reputationHistory (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 -- | <https://api.stackexchange.com/docs/me-reputation-history>
 meReputationHistory ∷ Request RequireToken __COUNTER__ [SE ReputationHistory]
-meReputationHistory = path ("me/reputation-history") <> parse (attoparsec items ".me/reputation-history: ")
+meReputationHistory =
+  path "me/reputation-history" <>
+  parse (attoparsec items ".me/reputation-history: ")
 
 
 -- | <https://api.stackexchange.com/docs/full-reputation-history>
@@ -744,7 +746,9 @@ reputationHistoryFull (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 -- | <https://api.stackexchange.com/docs/me-full-reputation-history>
 meReputationHistoryFull ∷ Request RequireToken __COUNTER__ [SE ReputationHistory]
-meReputationHistoryFull = path ("me/reputation-history/full") <> parse (attoparsec items ".me/reputation-history/full: ")
+meReputationHistoryFull =
+  path "me/reputation-history/full" <>
+  parse (attoparsec items ".me/reputation-history/full: ")
 
 
 --------------------------
@@ -807,7 +811,9 @@ suggestedEditsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 -- | <https://api.stackexchange.com/docs/me-suggested-edits>
 meSuggestedEdits ∷ Request RequireToken __COUNTER__ [SE SuggestedEdit]
-meSuggestedEdits = path ("me/suggested-edits") <> parse (attoparsec items ".me/suggested-edits: ")
+meSuggestedEdits =
+  path "me/suggested-edits" <>
+  parse (attoparsec items ".me/suggested-edits: ")
 
 
 --------------------------
@@ -855,7 +861,7 @@ tagsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 -- | <https://api.stackexchange.com/docs/me-tags>
 meTags ∷ Request RequireToken __COUNTER__ [SE Tag]
-meTags = path ("me/tags") <> parse (attoparsec items ".me/tags: ")
+meTags = path "me/tags" <> parse (attoparsec items ".me/tags: ")
 
 
 --------------------------
@@ -1006,4 +1012,4 @@ attoparsec f msg request = case AP.eitherResult $ AP.parse A.json request of
 
 
 items ∷ (Functor m, Monad m) ⇒ Value → m [SE a]
-items s = (SE s ^! field "items")
+items s = SE s ^! field "items"
