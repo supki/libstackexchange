@@ -102,7 +102,7 @@ makeLensesFor
 
 
 -- | Subject to monoid and idempotent laws, they all are checked in request test suite
-instance Monoid (Request a i r) where
+instance Monoid (Request a n r) where
   mempty = Request
     { _host = mempty
     , _path = mempty
@@ -120,13 +120,13 @@ instance Monoid (Request a i r) where
 
 
 -- | Useful if what's needed is immediate result parse
-instance Functor (Request a i) where
+instance Functor (Request a n) where
   fmap f = over __parse (fmap (f .))
   {-# INLINE fmap #-}
 
 
 -- | Default StackExchange API request, defines only host link
-instance Default (Request a i r) where
+instance Default (Request a n r) where
   def = mempty % __host .~ "https://api.stackexchange.com/2.1" % __method .~ "GET"
   {-# INLINE def #-}
 
@@ -134,7 +134,7 @@ instance Default (Request a i r) where
 -- | Request defining only API call host
 --
 -- Primarily used in Auth, not intended for usage by library user
-host ∷ Text → Request a i r
+host ∷ Text → Request a n r
 host p = mempty % __host .~ p
 {-# INLINE host #-}
 
@@ -142,7 +142,7 @@ host p = mempty % __host .~ p
 -- | Request defining only API call path
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
-path ∷ Text → Request a i r
+path ∷ Text → Request a n r
 path p = mempty % __path .~ p
 {-# INLINE path #-}
 
@@ -150,7 +150,7 @@ path p = mempty % __path .~ p
 -- | Request defining only call method
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
-method ∷ Text → Request a i r
+method ∷ Text → Request a n r
 method m = mempty % __method .~ m
 {-# INLINE method #-}
 
@@ -158,7 +158,7 @@ method m = mempty % __method .~ m
 -- | Request defining only API call result parsing function
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
-parse ∷ (ByteString → r) → Request a i r
+parse ∷ (ByteString → r) → Request a n r
 parse f = mempty % __parse ?~ f
 {-# INLINE parse #-}
 
@@ -170,37 +170,37 @@ parse f = mempty % __parse ?~ f
 --
 --
 -- Takes a list of (key, value) parameters such as @[("order", "asc"), ("sort", "rank")]@
-query ∷ [(Text, Text)] → Request a i r
+query ∷ [(Text, Text)] → Request a n r
 query q = mempty % __query .~ M.fromList q
 {-# INLINE query #-}
 
 
 -- | Convert token requiring Request into ready one
-token ∷ Text → Request RequireToken i r → Request Ready i r
+token ∷ Text → Request RequireToken n r → Request Ready n r
 token t = over __query (M.insert "access_token" t)
 {-# INLINE token #-}
 
 
 -- | Request defining only App key
-key ∷ Text → Request a i r
+key ∷ Text → Request a n r
 key s = mempty % __query .~ M.singleton "key" s
 {-# INLINE key #-}
 
 
 -- | Request defining only API call site query parameter
-site ∷ Text → Request a i r
+site ∷ Text → Request a n r
 site s = mempty % __query .~ M.singleton "site" s
 {-# INLINE site #-}
 
 
 -- | Request defining only API call filter query parameter
-filter ∷ Text → Request a i r
+filter ∷ Text → Request a n r
 filter f = mempty % __query .~ M.singleton "filter" f
 {-# INLINE filter #-}
 
 
 -- | Request defining only API call state query parameter
-state ∷ Text → Request a i r
+state ∷ Text → Request a n r
 state s = mempty % __query .~ M.singleton "state" s
 {-# INLINE state #-}
 
@@ -210,7 +210,7 @@ data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 
 
 -- | Request defining only API call scope query parameter
-scope ∷ [Scope] → Request a i r
+scope ∷ [Scope] → Request a n r
 scope ss = mempty % __query .~ (M.singleton "scope" $ scopie ss)
  where
   scopie xs = T.intercalate "," . flip map xs $ \case
@@ -223,7 +223,7 @@ scope ss = mempty % __query .~ (M.singleton "scope" $ scopie ss)
 -- | Request defining only Authentication API call application id
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
-client ∷ Int → Request a i r
+client ∷ Int → Request a n r
 client (toLazyText . decimal → c) = mempty % __query .~ M.singleton "client_id" c
 {-# INLINE client #-}
 
@@ -231,7 +231,7 @@ client (toLazyText . decimal → c) = mempty % __query .~ M.singleton "client_id
 -- | Request defining only Authentication API call redirect url
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
-redirectURI ∷ Text → Request a i r
+redirectURI ∷ Text → Request a n r
 redirectURI r = mempty % __query .~ M.singleton "redirect_uri" r
 {-# INLINE redirectURI #-}
 
@@ -239,7 +239,7 @@ redirectURI r = mempty % __query .~ M.singleton "redirect_uri" r
 -- | Request defining only Authentication API call application secret
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
-secret ∷ Text → Request a i r
+secret ∷ Text → Request a n r
 secret c = mempty % __query .~ M.singleton "client_secret" c
 {-# INLINE secret #-}
 
@@ -247,6 +247,6 @@ secret c = mempty % __query .~ M.singleton "client_secret" c
 -- | Request defining only Authentication API call code
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
-code ∷ Text → Request a i r
+code ∷ Text → Request a n r
 code c = mempty % __query .~ M.singleton "code" c
 {-# INLINE code #-}

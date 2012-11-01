@@ -48,7 +48,7 @@ instance Exception SEException
 
 
 -- | Send Request and parse response
-askSE ∷ Request Ready i r → IO r
+askSE ∷ Request Ready n r → IO r
 askSE (mappend def → q@Request {_method, _parse}) = do
   r ← C.withManager $ \m → C.parseUrl (render q) >>= \url →
     C.responseBody <$> C.httpLbs (url {C.method = toStrict $ encodeUtf8 _method}) m
@@ -59,7 +59,7 @@ askSE (mappend def → q@Request {_method, _parse}) = do
 
 
 -- | Render Request as string for networking
-render ∷ Request a i r → String
+render ∷ Request a n r → String
 render Request {_host, _path, _query} = T.unpack $ mconcat [_host, "/", _path, "?", argie _query]
  where
   argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty

@@ -97,6 +97,9 @@ import           Data.Text.Lazy.Builder.Int (decimal)
 import Network.StackExchange.Response
 import Network.StackExchange.Request
 
+-- $setup
+-- >>> let t = site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
+
 --------------------------
 -- Access Tokens
 --------------------------
@@ -127,11 +130,17 @@ applicationDeAuthenticate (T.intercalate ";" → ts) =
 --------------------------
 
 -- | <https://api.stackexchange.com/docs/answers>
+--
+-- >>> fmap length $ askSE (answers <> t)
+-- 30
 answers ∷ Request a "answers" [SE Answer]
 answers = path "answers" <> parse (attoparsec items ".answers: ")
 
 
 -- | <https://api.stackexchange.com/docs/answers-by-ids>
+--
+-- >>> fmap length $ askSE (answersByIds [6841479, 215422, 8881376] <> t)
+-- 3
 answersByIds ∷ [Int] → Request a "answersByIds" [SE Answer]
 answersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("answers/" <> is) <> parse (attoparsec items ".answers/{ids}: ")

@@ -20,12 +20,12 @@ import Network.StackExchange.Request
 
 
 -- | Construct URI at which user should approve app
-askPermission ∷ Int → Text → Request a i r
+askPermission ∷ Int → Text → Request a n r
 askPermission c r = host "https://stackexchange.com/oauth" <> client c <> redirectURI r
 
 
 -- | Request access_token from StackExchange
-accessToken ∷ Int → Text → Text → Text → Request a i Text
+accessToken ∷ Int → Text → Text → Text → Request a n Text
 accessToken c s c' r = mconcat
   [ host "https://stackexchange.com/oauth/access_token"
   , client c

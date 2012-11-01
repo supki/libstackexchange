@@ -60,6 +60,15 @@ test-suite request
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 
+test-suite api
+  type:          exitcode-stdio-1.0
+  ghc-options:   -threaded
+  main-is: doctests.hs
+  build-depends: base >= 4.6,
+                 doctest >= 0.8,
+                 http-conduit,
+                 libstackexchange
+
 executable rep-watcher
   if !flag(enable-examples)
     buildable: False
