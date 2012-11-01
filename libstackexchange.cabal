@@ -1,10 +1,11 @@
 name:          libstackexchange
 version:       0.1.0.0
-synopsis:      Wrapper to stackexchange sites' API
+synopsis:      StackExchange API interface
+description:   Provides interface for StackExchange v2.1 API
 homepage:      https://github.com/supki/libstackexchange
 license:       MIT
 license-file:  LICENSE
-author:        Matvey Aksenov
+author:        Matvey Aksenov, Dmitry Malikov
 maintainer:    matvey.aksenov@gmail.com
 category:      NetworkAPIs
 build-type:    Simple
@@ -12,9 +13,11 @@ cabal-version: >= 1.8
 
 flag enable-examples
   default: False
+flag enable-doctests
+  default: False
 
 library
-  build-depends: base >= 4.6,
+  build-depends: base >= 4.6 && < 5,
                  bytestring,
                  containers,
                  data-default,
@@ -22,7 +25,7 @@ library
                  text,
                  aeson,
                  http-conduit,
-                 lens
+                 lens >= 3.0.4
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
                    Network.StackExchange.API
@@ -61,13 +64,16 @@ test-suite request
                -fno-warn-unused-do-bind
 
 test-suite api
-  type:          exitcode-stdio-1.0
-  ghc-options:   -threaded
-  main-is: doctests.hs
   build-depends: base >= 4.6,
                  doctest >= 0.8,
                  http-conduit,
                  libstackexchange
+  if !flag(enable-doctests)
+    buildable: False
+  type:          exitcode-stdio-1.0
+  main-is: doctests.hs
+  ghc-options: -Wall
+               -fno-warn-unused-do-bind
 
 executable rep-watcher
   if !flag(enable-examples)
