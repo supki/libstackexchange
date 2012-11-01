@@ -78,7 +78,7 @@ newtype SE (a ∷ Object) = SE { unSE ∷ Value } deriving (Show, FromJSON)
 --
 -- @a@ is a phantom type showing whether authentication is enabled
 --
--- @i@ is a phantom type dissallowing combination of
+-- @n@ is a phantom type dissallowing combination of
 -- different API calls in one request
 --
 -- @r@ is a type of parsed API call result
