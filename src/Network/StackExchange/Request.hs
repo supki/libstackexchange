@@ -82,7 +82,7 @@ newtype SE (a ∷ Object) = SE { unSE ∷ Value } deriving (Show, FromJSON)
 -- different API calls in one request
 --
 -- @r@ is a type of parsed API call result
-data Request (a ∷ Auth) (i ∷ Nat) r = Request
+data Request (a ∷ Auth) (n ∷ Symbol) r = Request
   { _host ∷ Text -- ^ API host link
   , _path ∷ Text -- ^ API call link
   , _method ∷ Text -- ^ API call method (GET/POST)
