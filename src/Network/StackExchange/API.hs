@@ -131,6 +131,7 @@ applicationDeAuthenticate (T.intercalate ";" → ts) =
 
 -- | <https://api.stackexchange.com/docs/answers>
 --
+-- $answers
 -- >>> fmap length $ askSE (answers <> t)
 -- 30
 answers ∷ Request a "answers" [SE Answer]
@@ -139,6 +140,7 @@ answers = path "answers" <> parse (attoparsec items ".answers: ")
 
 -- | <https://api.stackexchange.com/docs/answers-by-ids>
 --
+-- $answersByIds
 -- >>> fmap length $ askSE (answersByIds [6841479, 215422, 8881376] <> t)
 -- 3
 answersByIds ∷ [Int] → Request a "answersByIds" [SE Answer]
