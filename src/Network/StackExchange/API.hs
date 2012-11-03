@@ -129,20 +129,20 @@ applicationDeAuthenticate (T.intercalate ";" → ts) =
 -- Answers
 --------------------------
 
--- | <https://api.stackexchange.com/docs/answers>
---
 -- $answers
 -- >>> fmap length $ askSE (answers <> t)
 -- 30
+
+-- | <https://api.stackexchange.com/docs/answers>
 answers ∷ Request a "answers" [SE Answer]
 answers = path "answers" <> parse (attoparsec items ".answers: ")
 
 
--- | <https://api.stackexchange.com/docs/answers-by-ids>
---
 -- $answersByIds
 -- >>> fmap length $ askSE (answersByIds [6841479, 215422, 8881376] <> t)
 -- 3
+
+-- | <https://api.stackexchange.com/docs/answers-by-ids>
 answersByIds ∷ [Int] → Request a "answersByIds" [SE Answer]
 answersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("answers/" <> is) <> parse (attoparsec items ".answers/{ids}: ")
