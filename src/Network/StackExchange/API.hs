@@ -99,6 +99,7 @@ import Network.StackExchange.Request
 
 -- $setup
 -- >>> let t = site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
+-- >>> let entriesOnPage = 30 :: Int
 
 --------------------------
 -- Access Tokens
@@ -130,8 +131,8 @@ applicationDeAuthenticate (T.intercalate ";" → ts) =
 --------------------------
 
 -- $answers
--- >>> fmap length $ askSE (answers <> t)
--- 30
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (answers <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/answers>
 answers ∷ Request a "answers" [SE Answer]
@@ -139,7 +140,7 @@ answers = path "answers" <> parse (attoparsec items ".answers: ")
 
 
 -- $answersByIds
--- >>> fmap length $ askSE (answersByIds [6841479, 215422, 8881376] <> t)
+-- >>> length `fmap` askSE (answersByIds [6841479, 215422, 8881376] <> t)
 -- 3
 
 -- | <https://api.stackexchange.com/docs/answers-by-ids>
@@ -148,12 +149,20 @@ answersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("answers/" <> is) <> parse (attoparsec items ".answers/{ids}: ")
 
 
+-- $answersOnUsers
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (answersOnUsers [972985] <> t)
+-- True
+
 -- | <https://api.stackexchange.com/docs/answers-on-users>
 answersOnUsers ∷ [Int] → Request a "answersOnUsers" [SE Answer]
 answersOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("users/" <> is <> "/answers") <>
   parse (attoparsec items ".users/{ids}/answers: ")
 
+
+-- $answersOnQuestions
+-- >>> length `fmap` askSE (answersOnQuestions [394601] <> t)
+-- 27
 
 -- | <https://api.stackexchange.com/docs/answers-on-questions>
 answersOnQuestions ∷ [Int] → Request a "answersOnQuestions" [SE Answer]
@@ -167,6 +176,9 @@ meAnswers ∷ Request RequireToken "meAnswers" [SE Answer]
 meAnswers =
   path "me/answers" <> parse (attoparsec items ".me/answers: ")
 
+-- $topUserAnswersInTags
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (topUserAnswersInTags 1097181 ["haskell"] <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/top-user-answers-in-tags>
 topUserAnswersInTags ∷ Int → [Text] → Request a "topUserAnswersInTags" [SE Answer]
@@ -186,10 +198,18 @@ meTagsTopAnswers (T.intercalate ";" → ts) =
 -- Badges
 --------------------------
 
+-- $badges
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (badges <> t)
+-- True
+
 -- | <https://api.stackexchange.com/docs/badges>
 badges ∷ Request a "badges" [SE Badge]
 badges = path "badges" <> parse (attoparsec items ".badges: ")
 
+
+-- $badgesByIds
+-- >>> length `fmap` askSE (badgesByIds [20] <> t)
+-- 1
 
 -- | <https://api.stackexchange.com/docs/badges-by-ids>
 badgesByIds ∷ [Int] → Request a "badgesByIds" [SE Badge]
@@ -197,18 +217,30 @@ badgesByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("badges/" <> is) <> parse (attoparsec items ".badges/{ids}: ")
 
 
+-- $badgeRecipientsByIds
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (badgeRecipientsByIds [20] <> t)
+-- True
+
 -- | <https://api.stackexchange.com/docs/badge-recipients-by-ids>
 badgeRecipientsByIds ∷ [Int] → Request a "badgeRecipientsByIds" [SE Badge]
 badgeRecipientsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
-  path ("badges" <> is <> "/recipients") <>
+  path ("badges/" <> is <> "/recipients") <>
   parse (attoparsec items ".badges/{ids}/recipients: ")
 
+
+-- $badgesByName
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (badgesByName <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/badges-by-name>
 badgesByName ∷ Request a "badgesByName" [SE Badge]
 badgesByName =
   path ("badges" <> "/name") <> parse (attoparsec items ".badges/name: ")
 
+
+-- $badgeRecipients
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (badgeRecipients <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/badge-recipients>
 badgeRecipients ∷ Request a "badgeRecipients" [SE Badge]
@@ -217,11 +249,19 @@ badgeRecipients =
   parse (attoparsec items ".badges/recipients: ")
 
 
+-- $badgesByTag
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (badgesByTag <> t)
+-- True
+
 -- | <https://api.stackexchange.com/docs/badges-by-tag>
 badgesByTag ∷ Request a "badgesByTag" [SE Badge]
 badgesByTag =
   path ("badges" <> "/tags") <> parse (attoparsec items ".badges/tags: ")
 
+
+-- $badgesOnUsers
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (badgesOnUsers [1097181] <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/badges-on-users>
 badgesOnUsers ∷ [Int] → Request a "badgesOnUsers" [SE Badge]
@@ -240,12 +280,20 @@ meBadges = path "me/badges" <> parse (attoparsec items ".me/badges: ")
 -- Comments
 --------------------------
 
+-- $commentsOnAnswers
+-- >>> length `fmap` askSE (commentsOnAnswers [394837] <> t)
+-- 19
+
 -- | <https://api.stackexchange.com/docs/comments-on-answers>
 commentsOnAnswers ∷ [Int] → Request a "commentsOnAnswers" [SE Comment]
 commentsOnAnswers (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("answers/" <> is <> "/comments") <>
   parse (attoparsec items ".answers/{ids}/comments: ")
 
+
+-- $comments
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (comments <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/comments>
 comments ∷ Request a "comments" [SE Comment]
@@ -266,11 +314,19 @@ editComment (toLazyText . decimal → i) body =
   parse (attoparsec (return . SE) ".comments/{id}/edit:")
 
 
+-- $commentsByIds
+-- >>> length `fmap` askSE (commentsByIds [1218390] <> t)
+-- 1
+
 -- | <https://api.stackexchange.com/docs/comments-by-ids>
 commentsByIds ∷ [Int] → Request a "commentsByIds" [SE Comment]
 commentsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("comments/" <> is) <> parse (attoparsec items ".comments/{ids}: ")
 
+
+-- $commentsOnPosts
+-- >>> length `fmap` askSE (commentsOnPosts [394837] <> t)
+-- 19
 
 -- | <https://api.stackexchange.com/docs/comments-on-posts>
 commentsOnPosts ∷ [Int] → Request a "commentsOnPosts" [SE Comment]
@@ -287,12 +343,20 @@ createComment (toLazyText . decimal → i) body =
   parse (attoparsec (return . SE) ".posts/{id}/comments/add:")
 
 
+-- $commentsOnQuestions
+-- >>> length `fmap` askSE (commentsOnQuestions [394601] <> t)
+-- 16
+
 -- | <https://api.stackexchange.com/docs/comments-on-questions>
 commentsOnQuestions ∷ [Int] → Request a "commentsOnQuestions" [SE Comment]
 commentsOnQuestions (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("questions/" <> is <> "/comments") <>
   parse (attoparsec items ".questions/{ids}/comments: ")
 
+
+-- $commentsOnUsers
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (commentsOnUsers [1097181] <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/comments-on-users>
 commentsOnUsers ∷ [Int] → Request a "commentsOnUsers" [SE Comment]
@@ -305,6 +369,10 @@ commentsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 meComments ∷ Request RequireToken "meComments" [SE Comment]
 meComments = path "me/comments" <> parse (attoparsec items ".me/comments: ")
 
+
+-- $commentsByUsersToUser
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (commentsByUsersToUser [230461,1011995,157360] 1097181 <> t)
+-- True
 
 -- | <https://api.stackexchange.com/docs/comments-by-users-to-user>
 commentsByUsersToUser ∷ [Int] → Int → Request a "commentsByUsersToUser" [SE Comment]
@@ -321,6 +389,10 @@ meCommentsTo (toLazyText . decimal → toid) =
   parse (attoparsec items ".me/comments/{toid}:")
 
 
+-- $mentionsOnUsers
+-- >>> ((== entriesOnPage) . length) `fmap` askSE (mentionsOnUsers [1097181] <> t)
+-- True
+
 -- | <https://api.stackexchange.com/docs/mentions-on-users>
 mentionsOnUsers ∷ [Int] → Request a "mentionsOnUsers" [SE Comment]
 mentionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -336,6 +408,10 @@ meMentioned = path "me/mentioned" <> parse (attoparsec items ".me/mentioned: ")
 --------------------------
 -- Errors
 --------------------------
+
+-- $errors
+-- >>> length `fmap` askSE errors
+-- 11
 
 -- | <https://api.stackexchange.com/docs/errors>
 errors ∷ Request a "errors" [SE Error]
