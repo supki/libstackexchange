@@ -164,8 +164,8 @@ answersOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $answersOnQuestions
--- >>> length `fmap` askSE (answersOnQuestions [394601] <> s <> k)
--- 27
+-- >>> checkLengthM $ askSE (answersOnQuestions [394601] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/answers-on-questions>
 answersOnQuestions ∷ [Int] → Request a "answersOnQuestions" [SE Answer]
@@ -284,8 +284,8 @@ meBadges = path "me/badges" <> parse (attoparsec items ".me/badges: ")
 --------------------------
 
 -- $commentsOnAnswers
--- >>> length `fmap` askSE (commentsOnAnswers [394837] <> s <> k)
--- 19
+-- >>> checkLengthM $ askSE (commentsOnAnswers [394837] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/comments-on-answers>
 commentsOnAnswers ∷ [Int] → Request a "commentsOnAnswers" [SE Comment]
@@ -328,8 +328,8 @@ commentsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $commentsOnPosts
--- >>> length `fmap` askSE (commentsOnPosts [394837] <> s <> k)
--- 19
+-- >>> checkLengthM $ askSE (commentsOnPosts [394837] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/comments-on-posts>
 commentsOnPosts ∷ [Int] → Request a "commentsOnPosts" [SE Comment]
@@ -347,8 +347,8 @@ createComment (toLazyText . decimal → i) body =
 
 
 -- $commentsOnQuestions
--- >>> length `fmap` askSE (commentsOnQuestions [394601] <> s <> k)
--- 16
+-- >>> checkLengthM $ askSE (commentsOnQuestions [394601] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/comments-on-questions>
 commentsOnQuestions ∷ [Int] → Request a "commentsOnQuestions" [SE Comment]
@@ -413,8 +413,8 @@ meMentioned = path "me/mentioned" <> parse (attoparsec items ".me/mentioned: ")
 --------------------------
 
 -- $errors
--- >>> length `fmap` askSE (errors <> k)
--- 11
+-- >>> checkLengthM $ askSE (errors <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/errors>
 errors ∷ Request a "errors" [SE Error]
@@ -1136,12 +1136,20 @@ meTags = path "me/tags" <> parse (attoparsec items ".me/tags: ")
 -- Tag Scores
 --------------------------
 
+-- $topAnswerersOnTag
+-- >>> checkLengthM $ askSE (topAnswerersOnTag "haskell" "Month" <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/top-answerers-on-tags>
 topAnswerersOnTag ∷ Text → Text → Request a "topAnswerersOnTag" [SE TagScore]
 topAnswerersOnTag t p =
   path ("tags/" <> t <> "/top-answerers/" <> p) <>
   parse (attoparsec items ".tags/{tag}/top-answerers/{period}: ")
 
+
+-- $topAskersOnTag
+-- >>> checkLengthM $ askSE (topAskersOnTag "haskell" "Month" <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/top-askers-on-tags>
 topAskersOnTag ∷ Text → Text → Request a "topAskersOnTag" [SE TagScore]
@@ -1154,11 +1162,19 @@ topAskersOnTag t p =
 -- Tag Synonyms
 --------------------------
 
+-- $tagSynonyms
+-- >>> checkLengthM $ askSE (tagSynonyms <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/tag-synonyms>
 tagSynonyms ∷ Request a "tagSynonyms" [SE TagSynonym]
 tagSynonyms =
   path "tags/synonyms" <> parse (attoparsec items ".tags/synonyms: ")
 
+
+-- $synonymsByTags
+-- >>> checkLengthM $ askSE (synonymsByTags ["iphone","java"] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/synonyms-by-tags>
 synonymsByTags ∷ [Text] → Request a "synonymsByTags" [SE TagSynonym]
@@ -1171,6 +1187,10 @@ synonymsByTags (T.intercalate ";" → ts) =
 -- Tag Wikis
 --------------------------
 
+-- $wikisByTags
+-- >>> length `fmap` askSE (wikisByTags ["haskell"] <> s <> k <> q)
+-- 1
+
 -- | <https://api.stackexchange.com/docs/wikis-by-tags>
 wikisByTags ∷ [Text] → Request a "wikisByTags" [SE TagWiki]
 wikisByTags (T.intercalate ";" → ts) =
@@ -1181,6 +1201,10 @@ wikisByTags (T.intercalate ";" → ts) =
 --------------------------
 -- Top Tags
 --------------------------
+
+-- $topAnswerTagsOnUsers
+-- >>> checkLengthM $ askSE (topAnswerTagsOnUsers 1097181 <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/top-answer-tags-on-users>
 topAnswerTagsOnUsers ∷ Int → Request a "topAnswerTagsOnUsers" [SE TopTag]
@@ -1193,6 +1217,10 @@ topAnswerTagsOnUsers (toLazyText . decimal → i) =
 meTopAnswerTags ∷ Request RequireToken "meTopAnswerTags" [SE TopTag]
 meTopAnswerTags = path "me/top-answer-tags" <> parse (attoparsec items ".me/top-answer-tags: ")
 
+
+-- $topQuestionTagsOnUsers
+-- >>> checkLengthM $ askSE (topQuestionTagsOnUsers 570689 <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/top-question-tags-on-users>
 topQuestionTagsOnUsers ∷ Int → Request a "topQuestionTagsOnUsers" [SE TopTag]
@@ -1210,10 +1238,18 @@ meTopQuestionTags = path "me/top-question-tags" <> parse (attoparsec items ".me/
 -- Users
 --------------------------
 
+-- $users
+-- >>> checkLengthM $ askSE (users <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/users>
 users ∷ Request a "users" [SE User]
 users = path "users" <> parse (attoparsec items ".users: ")
 
+
+-- $users
+-- >>> length `fmap` askSE (usersByIds [1097181] <> s <> k <> q)
+-- 1
 
 -- | <https://api.stackexchange.com/docs/users-by-ids>
 usersByIds ∷ [Int] → Request a "usersByIds" [SE User]
@@ -1226,11 +1262,19 @@ me ∷ Request RequireToken "me" (SE User)
 me = path "me" <> parse (head . attoparsec items ".me: ")
 
 
+-- $moderators
+-- >>> checkLengthM $ askSE (moderators <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/moderators>
 moderators ∷ Request a "moderators" [SE User]
 moderators =
   path "users/moderators" <> parse (attoparsec items ".users/moderators: ")
 
+
+-- $electedModerators
+-- >>> checkLengthM $ askSE (electedModerators <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/elected-moderators>
 electedModerators ∷ Request a "electedModerators" [SE User]
@@ -1242,6 +1286,10 @@ electedModerators =
 --------------------------
 -- User Timeline
 --------------------------
+
+-- $timelineOnUsers
+-- >>> checkLengthM $ askSE (timelineOnUsers [1097181] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/timeline-on-users>
 timelineOnUsers ∷ [Int] → Request a "timelineOnUsers" [SE UserTimeline]
@@ -1258,6 +1306,10 @@ meTimeline = path "me/timeline" <> parse (attoparsec items ".me/timeline: ")
 --------------------------
 -- Write Permissions
 --------------------------
+
+-- $writePermissions
+-- >>> length `fmap` askSE (writePermissions 1097181 <> s <> k <> q)
+-- 1
 
 -- | <https://api.stackexchange.com/docs/write-permissions>
 writePermissions ∷ Int → Request a "writePermissions" [SE WritePermission]
