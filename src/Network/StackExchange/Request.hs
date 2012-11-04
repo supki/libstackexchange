@@ -33,8 +33,10 @@ import           Data.Text.Lazy.Builder (toLazyText)
 import           Data.Text.Lazy.Builder.Int (decimal)
 
 
--- | Whether to use authentication at all. Currently isn't used
-data Auth = RequireToken | Ready
+-- | Authentication
+data Auth =
+    RequireToken -- ^ Request requires auth_token
+  | Ready -- ^ Request may be sent without auth_token
 
 
 -- | SE response type
@@ -169,7 +171,7 @@ parse f = mempty % __parse ?~ f
 -- 'filter', etc calls may be more convenient
 --
 --
--- Takes a list of (key, value) parameters such as @[("order", "asc"), ("sort", "rank")]@
+-- Takes a list of (key, value) parameters such as @[(\"order\", \"asc\"), (\"sort\", \"rank\")]@
 query ∷ [(Text, Text)] → Request a n r
 query q = mempty % __query .~ M.fromList q
 {-# INLINE query #-}
