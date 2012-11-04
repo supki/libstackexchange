@@ -84,7 +84,7 @@ module Network.StackExchange.API
 import Data.Monoid ((<>))
 
 import           Control.Exception (throw)
-import           Control.Lens ((^!))
+import           Control.Lens ((^!), (^..), (^.), traverse)
 import           Data.Aeson (Value)
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Lazy as AP
@@ -98,8 +98,10 @@ import Network.StackExchange.Response
 import Network.StackExchange.Request
 
 -- $setup
--- >>> let t = site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
--- >>> let entriesOnPage = 30 :: Int
+-- >>> let pagesize = 10 :: Int
+-- >>> let k = key "Lhg6xe5d5BvNK*C0S8jijA(("
+-- >>> let s = site "stackoverflow"
+-- >>> let q = query [("pagesize", "10")]
 
 --------------------------
 -- Access Tokens
@@ -131,7 +133,7 @@ applicationDeAuthenticate (T.intercalate ";" → ts) =
 --------------------------
 
 -- $answers
--- >>> ((== entriesOnPage) . length) `fmap` askSE (answers <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (answers <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/answers>
@@ -140,7 +142,7 @@ answers = path "answers" <> parse (attoparsec items ".answers: ")
 
 
 -- $answersByIds
--- >>> length `fmap` askSE (answersByIds [6841479, 215422, 8881376] <> t)
+-- >>> length `fmap` askSE (answersByIds [6841479, 215422, 8881376] <> s <> k)
 -- 3
 
 -- | <https://api.stackexchange.com/docs/answers-by-ids>
@@ -150,7 +152,7 @@ answersByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $answersOnUsers
--- >>> ((== entriesOnPage) . length) `fmap` askSE (answersOnUsers [972985] <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (answersOnUsers [972985] <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/answers-on-users>
@@ -161,7 +163,7 @@ answersOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $answersOnQuestions
--- >>> length `fmap` askSE (answersOnQuestions [394601] <> t)
+-- >>> length `fmap` askSE (answersOnQuestions [394601] <> s <> k)
 -- 27
 
 -- | <https://api.stackexchange.com/docs/answers-on-questions>
@@ -177,7 +179,7 @@ meAnswers =
   path "me/answers" <> parse (attoparsec items ".me/answers: ")
 
 -- $topUserAnswersInTags
--- >>> ((== entriesOnPage) . length) `fmap` askSE (topUserAnswersInTags 1097181 ["haskell"] <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (topUserAnswersInTags 1097181 ["haskell"] <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/top-user-answers-in-tags>
@@ -199,7 +201,7 @@ meTagsTopAnswers (T.intercalate ";" → ts) =
 --------------------------
 
 -- $badges
--- >>> ((== entriesOnPage) . length) `fmap` askSE (badges <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (badges <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/badges>
@@ -208,7 +210,7 @@ badges = path "badges" <> parse (attoparsec items ".badges: ")
 
 
 -- $badgesByIds
--- >>> length `fmap` askSE (badgesByIds [20] <> t)
+-- >>> length `fmap` askSE (badgesByIds [20] <> s <> k <> q)
 -- 1
 
 -- | <https://api.stackexchange.com/docs/badges-by-ids>
@@ -218,7 +220,7 @@ badgesByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $badgeRecipientsByIds
--- >>> ((== entriesOnPage) . length) `fmap` askSE (badgeRecipientsByIds [20] <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (badgeRecipientsByIds [20] <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/badge-recipients-by-ids>
@@ -229,7 +231,7 @@ badgeRecipientsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $badgesByName
--- >>> ((== entriesOnPage) . length) `fmap` askSE (badgesByName <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (badgesByName <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/badges-by-name>
@@ -239,7 +241,7 @@ badgesByName =
 
 
 -- $badgeRecipients
--- >>> ((== entriesOnPage) . length) `fmap` askSE (badgeRecipients <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (badgeRecipients <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/badge-recipients>
@@ -250,7 +252,7 @@ badgeRecipients =
 
 
 -- $badgesByTag
--- >>> ((== entriesOnPage) . length) `fmap` askSE (badgesByTag <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (badgesByTag <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/badges-by-tag>
@@ -260,7 +262,7 @@ badgesByTag =
 
 
 -- $badgesOnUsers
--- >>> ((== entriesOnPage) . length) `fmap` askSE (badgesOnUsers [1097181] <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (badgesOnUsers [1097181] <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/badges-on-users>
@@ -281,7 +283,7 @@ meBadges = path "me/badges" <> parse (attoparsec items ".me/badges: ")
 --------------------------
 
 -- $commentsOnAnswers
--- >>> length `fmap` askSE (commentsOnAnswers [394837] <> t)
+-- >>> length `fmap` askSE (commentsOnAnswers [394837] <> s <> k)
 -- 19
 
 -- | <https://api.stackexchange.com/docs/comments-on-answers>
@@ -292,7 +294,7 @@ commentsOnAnswers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $comments
--- >>> ((== entriesOnPage) . length) `fmap` askSE (comments <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (comments <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/comments>
@@ -315,7 +317,7 @@ editComment (toLazyText . decimal → i) body =
 
 
 -- $commentsByIds
--- >>> length `fmap` askSE (commentsByIds [1218390] <> t)
+-- >>> length `fmap` askSE (commentsByIds [1218390] <> s <> k)
 -- 1
 
 -- | <https://api.stackexchange.com/docs/comments-by-ids>
@@ -325,7 +327,7 @@ commentsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $commentsOnPosts
--- >>> length `fmap` askSE (commentsOnPosts [394837] <> t)
+-- >>> length `fmap` askSE (commentsOnPosts [394837] <> s <> k)
 -- 19
 
 -- | <https://api.stackexchange.com/docs/comments-on-posts>
@@ -344,7 +346,7 @@ createComment (toLazyText . decimal → i) body =
 
 
 -- $commentsOnQuestions
--- >>> length `fmap` askSE (commentsOnQuestions [394601] <> t)
+-- >>> length `fmap` askSE (commentsOnQuestions [394601] <> s <> k)
 -- 16
 
 -- | <https://api.stackexchange.com/docs/comments-on-questions>
@@ -355,7 +357,7 @@ commentsOnQuestions (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $commentsOnUsers
--- >>> ((== entriesOnPage) . length) `fmap` askSE (commentsOnUsers [1097181] <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (commentsOnUsers [1097181] <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/comments-on-users>
@@ -371,7 +373,7 @@ meComments = path "me/comments" <> parse (attoparsec items ".me/comments: ")
 
 
 -- $commentsByUsersToUser
--- >>> ((== entriesOnPage) . length) `fmap` askSE (commentsByUsersToUser [230461,1011995,157360] 1097181 <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (commentsByUsersToUser [230461,1011995,157360] 1097181 <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/comments-by-users-to-user>
@@ -390,7 +392,7 @@ meCommentsTo (toLazyText . decimal → toid) =
 
 
 -- $mentionsOnUsers
--- >>> ((== entriesOnPage) . length) `fmap` askSE (mentionsOnUsers [1097181] <> t)
+-- >>> ((== pagesize) . length) `fmap` askSE (mentionsOnUsers [1097181] <> s <> k <> q)
 -- True
 
 -- | <https://api.stackexchange.com/docs/mentions-on-users>
@@ -410,7 +412,7 @@ meMentioned = path "me/mentioned" <> parse (attoparsec items ".me/mentioned: ")
 --------------------------
 
 -- $errors
--- >>> length `fmap` askSE errors
+-- >>> length `fmap` askSE (errors <> k)
 -- 11
 
 -- | <https://api.stackexchange.com/docs/errors>
@@ -431,6 +433,10 @@ events = path "events" <> parse (attoparsec items ".events: ")
 -- Filters
 --------------------------
 
+-- $createFilter
+-- >>> askSE (createFilter [] [] "none" <> k) >>= (^! field "items" . array "filter") :: IO [String]
+-- ["none"]
+
 -- | <https://api.stackexchange.com/docs/create-filter>
 createFilter ∷ [Text] → [Text] → Text → Request a "createFilter" (SE Filter)
 createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) base =
@@ -438,6 +444,10 @@ createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) bas
   query [("include", include), ("exclude", exclude), ("base", base)] <>
   parse (attoparsec (return . SE) ".filter/create: ")
 
+
+-- $readFilter
+-- >>> (\x -> (x ^.. traverse) ^! traverse . field "filter" :: [String]) `fmap` askSE (readFilter ["none"] <> k)
+-- ["none"]
 
 -- | <https://api.stackexchange.com/docs/read-filter>
 readFilter ∷ [Text] → Request a "readFilter" [SE Filter]
@@ -496,6 +506,10 @@ meUnreadInbox =
 -- Info
 --------------------------
 
+-- $info
+-- >>> length `fmap` ((^! field "items" . array "total_users") =<< askSE (info <> s <> k) :: IO [Int])
+-- 1
+
 -- | <https://api.stackexchange.com/docs/info>
 info ∷ Request a "info" (SE Info)
 info = path "info" <> parse (attoparsec (return . SE) ".info: ")
@@ -504,6 +518,10 @@ info = path "info" <> parse (attoparsec (return . SE) ".info: ")
 --------------------------
 -- Network Users
 --------------------------
+
+-- $associatedUsers
+-- >>> length `fmap` askSE (associatedUsers [1097181] <> k)
+-- 1
 
 -- | <https://api.stackexchange.com/docs/associated-users>
 associatedUsers ∷ [Int] → Request a "associatedUsers" [SE NetworkUser]
@@ -522,6 +540,10 @@ meAssociatedUsers =
 --------------------------
 -- Merge History
 --------------------------
+
+-- $mergeHistory
+-- >>> ((>= 1) . length) `fmap` askSE (mergeHistory [14] <> k)
+-- True
 
 -- | <https://api.stackexchange.com/docs/merge-history>
 mergeHistory ∷ [Int] → Request a "mergeHistory" [SE AccountMerge]
@@ -583,10 +605,18 @@ meUnreadNotifications =
 -- Posts
 --------------------------
 
+-- $posts
+-- >>> ((== pagesize) . length) `fmap` askSE (posts <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/posts>
 posts ∷ Request a "posts" [SE Post]
 posts = path "posts" <> parse (attoparsec items ".posts: ")
 
+
+-- $postsByIds
+-- >>> length `fmap` askSE (postsByIds [394601] <> s <> k)
+-- 1
 
 -- | <https://api.stackexchange.com/docs/posts-by-ids>
 postsByIds ∷ [Int] → Request a "postsByIds" [SE Post]
@@ -598,10 +628,18 @@ postsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 -- Privileges
 --------------------------
 
+-- $privileges
+-- >>> ((== pagesize) . length) `fmap` askSE (privileges <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/privileges>
 privileges ∷ Request a "privileges" [SE Privilege]
 privileges = path "privileges" <> parse (attoparsec items ".privileges: ")
 
+
+-- $privilegesOnUsers
+-- >>> ((== pagesize) . length) `fmap` askSE (privilegesOnUsers 1097181 <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/privileges-on-users>
 privilegesOnUsers ∷ Int → Request a "privilegesOnUsers" [SE Privilege]
@@ -619,16 +657,28 @@ mePriviledges = path "me/privileges" <> parse (attoparsec items ".me/privileges:
 -- Questions
 --------------------------
 
+-- $questions
+-- >>> ((== pagesize) . length) `fmap` askSE (questions <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/questions>
 questions ∷ Request a "questions" [SE Question]
 questions = path "questions" <> parse (attoparsec items ".questions: ")
 
+
+-- $questionsByIds
+-- >>> length `fmap` askSE (questionsByIds [394601] <> s <> k)
+-- 1
 
 -- | <https://api.stackexchange.com/docs/questions-by-ids>
 questionsByIds ∷ [Int] → Request a "questionsByIds" [SE Question]
 questionsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("questions/" <> is) <> parse (attoparsec items ".questions/{ids}: ")
 
+
+-- $linkedQuestions
+-- >>> ((== pagesize) . length) `fmap` askSE (linkedQuestions [394601] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/linked-questions>
 linkedQuestions ∷ [Int] → Request a "linkedQuestions" [SE Question]
@@ -637,6 +687,10 @@ linkedQuestions (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".questions/{ids}/linked: ")
 
 
+-- $relatedQuestions
+-- >>> ((== pagesize) . length) `fmap` askSE (relatedQuestions [394601] <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/related-questions>
 relatedQuestions ∷ [Int] → Request a "relatedQuestions" [SE Question]
 relatedQuestions (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -644,11 +698,19 @@ relatedQuestions (T.intercalate ";" . map (toLazyText . decimal) → is) =
   parse (attoparsec items ".questions/{ids}/related: ")
 
 
+-- $featuredQuestions
+-- >>> ((== pagesize) . length) `fmap` askSE (featuredQuestions <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/featured-questions>
 featuredQuestions ∷ Request a "featuredQuestions" [SE Question]
 featuredQuestions =
   path "questions/featured" <> parse (attoparsec items ".questions/featured: ")
 
+
+-- $unansweredQuestions
+-- >>> ((== pagesize) . length) `fmap` askSE (unansweredQuestions <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/unanswered-questions>
 unansweredQuestions ∷ Request a "unansweredQuestions" [SE Question]
@@ -657,12 +719,20 @@ unansweredQuestions =
   parse (attoparsec items ".questions/unanswered: ")
 
 
+-- $noAnswerQuestions
+-- >>> ((== pagesize) . length) `fmap` askSE (noAnswerQuestions <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/no-answer-questions>
 noAnswerQuestions ∷ Request a "noAnswerQuestions" [SE Question]
 noAnswerQuestions =
   path "questions/no-answers" <>
   parse (attoparsec items ".questions/no-answers: ")
 
+
+-- $search
+-- >>> ((== pagesize) . length) `fmap` askSE (search "why" ["haskell"] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/search>
 search ∷ Text → [Text] → Request a "search" [SE Question]
@@ -672,11 +742,19 @@ search t (T.intercalate ";" → ts) =
   parse (attoparsec items ".search: ")
 
 
+-- $advancedSearch
+-- >>> ((== pagesize) . length) `fmap` askSE (advancedSearch <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/advanced-search>
 advancedSearch ∷ Request a "advancedSearch" [SE Question]
 advancedSearch =
   path "search/advanced" <> parse (attoparsec items ".search/advanced: ")
 
+
+-- $similar
+-- >>> ((== pagesize) . length) `fmap` askSE (similar "sublists of list" ["haskell"] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/similar>
 similar ∷ Text → [Text] → Request a "similar" [SE Question]
@@ -686,12 +764,20 @@ similar t (T.intercalate ";" → ts) =
   parse (attoparsec items ".similar: ")
 
 
+-- $faqsByTags
+-- >>> ((== pagesize) . length) `fmap` askSE (faqsByTags ["haskell"] <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/faqs-by-tags>
 faqsByTags ∷ [Text] → Request a "faqsByTags" [SE Question]
 faqsByTags (T.intercalate ";" → ts) =
   path ("tags/" <> ts <> "/faq") <>
   parse (attoparsec items ".tags/{tags}/faq: ")
 
+
+-- $favoritesOnUsers
+-- >>> ((== pagesize) . length) `fmap` askSE (favoritesOnUsers [9204] <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/favorites-on-users>
 favoritesOnUsers ∷ [Int] → Request a "favoritesOnUsers" [SE Question]
@@ -705,6 +791,10 @@ meFavorites ∷ Request RequireToken "meFavorites" [SE Question]
 meFavorites = path "me/favorites" <> parse (attoparsec items ".me/favorites: ")
 
 
+-- $questionsOnUsers
+-- >>> ((== pagesize) . length) `fmap` askSE (questionsOnUsers [9204] <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/questions-on-users>
 questionsOnUsers ∷ [Int] → Request a "questionsOnUsers" [SE Question]
 questionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -717,6 +807,11 @@ meQuestions ∷ Request RequireToken "meQuestions" [SE Question]
 meQuestions = path "me/questions" <> parse (attoparsec items ".me/questions: ")
 
 
+-- $featuredQuestionsOnUsers
+-- >>> fq <- askSE $ featuredQuestions <> s <> k <> q
+-- >>> ((== pagesize) . length) `fmap` askSE (featuredQuestionsOnUsers (map (\x -> x ^. field "owner" . field "user_id" :: Int) fq) <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/featured-questions-on-users>
 featuredQuestionsOnUsers ∷ [Int] → Request a "featuredQuestionsOnUsers" [SE Question]
 featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -728,6 +823,11 @@ featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is)
 meFeaturedQuestions ∷ Request RequireToken "meFeaturedQuestions" [SE Question]
 meFeaturedQuestions = path "me/questions/featured" <> parse (attoparsec items ".me/questions/featured: ")
 
+
+-- $noAnswerQuestionsOnUsers
+-- >>> naq <- askSE (noAnswerQuestions <> s <> k <> q)
+-- >>> ((== pagesize) . length) `fmap` askSE (noAnswerQuestionsOnUsers (map (\x -> x ^. field "owner" . int "user_id") naq) <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/no-answer-questions-on-users>
 noAnswerQuestionsOnUsers ∷ [Int] → Request a "noAnswerQuestionsOnUsers" [SE Question]
