@@ -13,7 +13,7 @@ module Network.StackExchange.Response
     -- * Generalized combinator
   , aeson
     -- * Convenience functions
-  , field, fields
+  , field, array, int, text
   ) where
 
 import Control.Applicative ((<$>))
@@ -25,7 +25,7 @@ import Data.Typeable (Typeable)
 
 import           Data.ByteString.Lazy (ByteString, toStrict)
 import           Control.Lens
-import           Data.Aeson (FromJSON, Value, (.:), parseJSON)
+import           Data.Aeson (FromJSON, (.:), parseJSON)
 import qualified Data.Aeson.Types as A
 import           Data.Default (Default(..))
 import qualified Data.Map as M
@@ -75,11 +75,23 @@ aeson p = act $ A.parse p >>> \case
 
 -- | Select specific field in JSON
 field ∷ (Monad m, FromJSON a) ⇒ Text → Action m (SE x) a
-field xs = aeson ((.: xs) <=< parseJSON . unSE)
+field x = aeson $ (.: x) <=< parseJSON . unSE
 {-# INLINE field #-}
 
 
+-- | Select specific 'Int' field in JSON
+int ∷ Monad m ⇒ Text → Action m (SE x) Int
+int = field
+{-# INLINE int #-}
+
+
+-- | Select specific 'Text' field in JSON
+text ∷ Monad m ⇒ Text → Action m (SE x) Text
+text = field
+{-# INLINE text #-}
+
+
 -- | Select specific fields of an array in JSON
-fields ∷ (Monad m, FromJSON a) ⇒ Text → Action m Value [a]
-fields xs = aeson $ mapM (.: xs) <=< parseJSON
-{-# INLINE fields #-}
+array ∷ (Monad m, FromJSON a) ⇒ Text → Action m (SE x) [a]
+array xs = aeson $ mapM (.: xs) <=< parseJSON . unSE
+{-# INLINE array #-}

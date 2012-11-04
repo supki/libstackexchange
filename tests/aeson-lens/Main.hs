@@ -58,4 +58,4 @@ tests = TestList . sequence
   testKeysLookup parsed = TestCase . assertEqual "keys lookup" (Just [4,7]) $
     (parsed ^! field "pinapples" ∷ Maybe [Int])
   testNestedKeysLookup parsed = TestCase . assertEqual "nested keys lookup" (Just [4,7,4,7]) $
-    (parsed ^! field "peaches" . fields "peaches" . traverse ∷ Maybe [Int])
+    (parsed ^! field "peaches" . array "peaches" . traverse ∷ Maybe [Int])

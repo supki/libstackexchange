@@ -13,7 +13,7 @@ import Network.StackExchange
 
 
 main ∷ IO ()
-main = askSE req >>= mapM_ (print ∷ Int → IO ())
+main = askSE req >>= mapM_ print
  where
-  req = (\xs → xs ^.. traverse . field "reputation") <$>
+  req = (\xs → xs ^.. traverse . int "reputation") <$>
     usersByIds [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
