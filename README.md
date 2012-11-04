@@ -60,15 +60,15 @@ ghci> askSE $ map (fromJSON . unSE) <$> questions <> site "stackoverflow" :: IO 
 [Success (Title "Playing encrypted video"),Success (Title "How do i get a If statment to read a multilined textbox?"), ...]
 ```
 
-For _hardcore_ users familiar with [lens][4], there are `field` and
-`fields` actions that cover the most common task of getting specific JSON field(s):
+For _hardcore_ users familiar with [lens][4], there are convenience
+actions that cover the most common task of getting specific JSON field(s):
 
 ```haskell
-qhci> (qs ^.. traverse) ^! traverse . field "title" :: [Text]
+qhci> (qs ^.. traverse) ^! traverse . text "title"
 ["Playing encrypted video", "How do i get a If statment to read a multilined textbox?", ...]
 ```
 
-And if `field` and `fields` are not enough, full power of aeson is provided by `aeson` action.
+And if they are not enough, full power of aeson is provided by `aeson` action.
 
  [1]: https://api.stackexchange.com/docs
  [2]: http://hackage.haskell.org/package/aeson
