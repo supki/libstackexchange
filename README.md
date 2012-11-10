@@ -51,13 +51,6 @@ ghci> map (fromJSON . unSE) qs :: [Result Title]
 [Success (Title "Playing encrypted video"),Success (Title "How do i get a If statment to read a multilined textbox?"), ...]
 ```
 
-You can simplify it a bit by using `Functor Request` instance:
-
-```haskell
-ghci> askSE $ map (fromJSON . unSE) <$> questions <> site "stackoverflow" :: IO [Result Title]
-[Success (Title "Playing encrypted video"),Success (Title "How do i get a If statment to read a multilined textbox?"), ...]
-```
-
 Another way for experienced users familiar with [lens][4] would be [aeson-lens][6] package.
 For the ease of interaction `se` `Iso` is provided:
 

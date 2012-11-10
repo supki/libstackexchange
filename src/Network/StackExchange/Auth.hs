@@ -10,6 +10,7 @@ import Control.Applicative ((<$>), (*>))
 import Control.Exception (throw)
 import Data.Monoid ((<>), mconcat)
 
+import           Data.Default (def)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Encoding (decodeUtf8)
@@ -20,8 +21,8 @@ import Network.StackExchange.Request
 
 
 -- | Construct URI at which user should approve app
-askPermission ∷ Int → Text → Request a n r
-askPermission c r = host "https://stackexchange.com/oauth" <> client c <> redirectURI r
+askPermission ∷ Int → Text → R a n r
+askPermission c r = unwrap (host "https://stackexchange.com/oauth" <> client c <> redirectURI r) def
 
 
 -- | Request access_token from StackExchange

@@ -2,6 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UnicodeSyntax #-}
@@ -9,16 +10,21 @@
 -- | StackExchange API request manipulation routines
 module Network.StackExchange.Request
   ( -- * Type
-    Request(..), Auth(..), SE(..), Object(..)
+    Request, R(..), Auth(..), SE(..), Object(..)
     -- * Constructing requests
   , host, path, method, parse
   , query, token, key, site, filter, state, Scope(..), scope
   , client, redirectURI, secret, code
+    -- * Internal wrapping/unwrapping
+  , wrap, unwrap
+    -- * Rendering
+  , render
   ) where
 
-import Data.Monoid (Monoid(..), (<>))
-import GHC.TypeLits
+import Data.Monoid
+import GHC.TypeLits (Symbol)
 import Prelude hiding (filter)
+import Unsafe.Coerce (unsafeCoerce)
 
 import           Control.Lens hiding (query)
 import           Data.ByteString.Lazy (ByteString)
@@ -84,7 +90,7 @@ newtype SE (a ∷ Object) = SE { unSE ∷ Value } deriving (Show, FromJSON)
 -- different API calls in one request
 --
 -- @r@ is a type of parsed API call result
-data Request (a ∷ Auth) (n ∷ Symbol) r = Request
+data R (a ∷ Auth) (n ∷ Symbol) r = R
   { _host ∷ Text -- ^ API host link
   , _path ∷ Text -- ^ API call link
   , _method ∷ Text -- ^ API call method (GET/POST)
@@ -100,36 +106,21 @@ makeLensesFor
   , ("_query", "__query")
   , ("_parse", "__parse")
   ]
-  ''Request
+  ''R
 
 
--- | Subject to monoid and idempotent laws, they all are checked in request test suite
-instance Monoid (Request a n r) where
-  mempty = Request
-    { _host = mempty
-    , _path = mempty
-    , _method = mempty
-    , _query = mempty
-    , _parse = Nothing
-    }
-  l `mappend` r = Request
-    { _host = _host $ if T.null $ _host r then l else r
-    , _path = _path $ if T.null $ _path r then l else r
-    , _method = _method $ if T.null $ _method r then l else r
-    , _query = _query r <> _query l
-    , _parse = _parse $ case _parse r of Just _ → r; Nothing → l
-    }
-
-
--- | Useful if what's needed is immediate result parse
-instance Functor (Request a n) where
-  fmap f = over __parse (fmap (f .))
-  {-# INLINE fmap #-}
+type Request a n r = Dual (Endo (R a n r))
 
 
 -- | Default StackExchange API request, defines only host link
-instance Default (Request a n r) where
-  def = mempty % __host .~ "https://api.stackexchange.com/2.1" % __method .~ "GET"
+instance Default (R a n r) where
+  def = R
+    { _host = "https://api.stackexchange.com/2.1"
+    , _path = mempty
+    , _method = "GET"
+    , _query = mempty
+    , _parse = Nothing
+    }
   {-# INLINE def #-}
 
 
@@ -137,7 +128,7 @@ instance Default (Request a n r) where
 --
 -- Primarily used in Auth, not intended for usage by library user
 host ∷ Text → Request a n r
-host p = mempty % __host .~ p
+host p = wrap $ __host .~ p
 {-# INLINE host #-}
 
 
@@ -145,7 +136,7 @@ host p = mempty % __host .~ p
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
 path ∷ Text → Request a n r
-path p = mempty % __path .~ p
+path p = wrap $ __path .~ p
 {-# INLINE path #-}
 
 
@@ -153,7 +144,7 @@ path p = mempty % __path .~ p
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
 method ∷ Text → Request a n r
-method m = mempty % __method .~ m
+method m = wrap $ __method .~ m
 {-# INLINE method #-}
 
 
@@ -161,7 +152,7 @@ method m = mempty % __method .~ m
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
 parse ∷ (ByteString → r) → Request a n r
-parse f = mempty % __parse ?~ f
+parse f = wrap $ __parse ?~ f
 {-# INLINE parse #-}
 
 
@@ -173,37 +164,37 @@ parse f = mempty % __parse ?~ f
 --
 -- Takes a list of (key, value) parameters such as @[(\"order\", \"asc\"), (\"sort\", \"rank\")]@
 query ∷ [(Text, Text)] → Request a n r
-query q = mempty % __query .~ M.fromList q
+query q = wrap $ __query %~ (M.fromList q <>)
 {-# INLINE query #-}
 
 
 -- | Convert token requiring Request into ready one
 token ∷ Text → Request RequireToken n r → Request Ready n r
-token t = over __query (M.insert "access_token" t)
+token t = unsafeCoerce . mappend (wrap (__query %~ M.insert "access_token" t))
 {-# INLINE token #-}
 
 
 -- | Request defining only App key
 key ∷ Text → Request a n r
-key s = mempty % __query .~ M.singleton "key" s
+key s = wrap $ __query %~ M.insert "key" s
 {-# INLINE key #-}
 
 
 -- | Request defining only API call site query parameter
 site ∷ Text → Request a n r
-site s = mempty % __query .~ M.singleton "site" s
+site s = wrap $ __query %~ M.insert "site" s
 {-# INLINE site #-}
 
 
 -- | Request defining only API call filter query parameter
 filter ∷ Text → Request a n r
-filter f = mempty % __query .~ M.singleton "filter" f
+filter f = wrap $ __query %~ M.insert "filter" f
 {-# INLINE filter #-}
 
 
 -- | Request defining only API call state query parameter
 state ∷ Text → Request a n r
-state s = mempty % __query .~ M.singleton "state" s
+state s = wrap $ __query %~ M.insert "state" s
 {-# INLINE state #-}
 
 
@@ -213,7 +204,7 @@ data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 
 -- | Request defining only API call scope query parameter
 scope ∷ [Scope] → Request a n r
-scope ss = mempty % __query .~ (M.singleton "scope" $ scopie ss)
+scope ss = wrap $ __query %~ (M.insert "scope" $ scopie ss)
  where
   scopie xs = T.intercalate "," . flip map xs $ \case
     ReadInbox   → "read_inbox"
@@ -226,7 +217,7 @@ scope ss = mempty % __query .~ (M.singleton "scope" $ scopie ss)
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 client ∷ Int → Request a n r
-client (toLazyText . decimal → c) = mempty % __query .~ M.singleton "client_id" c
+client (toLazyText . decimal → c) = wrap $ __query %~ M.insert "client_id" c
 {-# INLINE client #-}
 
 
@@ -234,7 +225,7 @@ client (toLazyText . decimal → c) = mempty % __query .~ M.singleton "client_id
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 redirectURI ∷ Text → Request a n r
-redirectURI r = mempty % __query .~ M.singleton "redirect_uri" r
+redirectURI r = wrap $ __query %~ M.insert "redirect_uri" r
 {-# INLINE redirectURI #-}
 
 
@@ -242,7 +233,7 @@ redirectURI r = mempty % __query .~ M.singleton "redirect_uri" r
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 secret ∷ Text → Request a n r
-secret c = mempty % __query .~ M.singleton "client_secret" c
+secret c = wrap $ __query %~ M.insert "client_secret" c
 {-# INLINE secret #-}
 
 
@@ -250,5 +241,22 @@ secret c = mempty % __query .~ M.singleton "client_secret" c
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 code ∷ Text → Request a n r
-code c = mempty % __query .~ M.singleton "code" c
+code c = wrap $ __query %~ M.insert "code" c
 {-# INLINE code #-}
+
+
+-- | Wrapping to interesting Monoid (R -> R) instance
+wrap ∷ (R a n r → R a n r) → Request a n r
+wrap = Dual . Endo
+
+
+-- | Unwrapping from interesting Monoid (R -> R) instance
+unwrap ∷ Request a n r → (R a n r → R a n r)
+unwrap = appEndo . getDual
+
+
+-- | Render R as URI string for networking
+render ∷ R a n r → String
+render R {_host, _path, _query} = T.unpack $ mconcat [_host, "/", _path, "?", argie _query]
+ where
+  argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty

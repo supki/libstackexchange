@@ -15,7 +15,7 @@ import Network.StackExchange
 
 
 main ∷ IO ()
-main = askSE req >>= mapM_ (print . truncate) . catMaybes
+main = reputation <$> askSE req >>= mapM_ (print . truncate) . catMaybes
  where
-  req = (\xs → xs ^.. traverse . from se . to Just . L.key "reputation" . L.asDouble) <$>
-    usersByIds [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
+  req = usersByIds [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
+  reputation xs = xs ^.. traverse . from se . to Just . L.key "reputation" . L.asDouble

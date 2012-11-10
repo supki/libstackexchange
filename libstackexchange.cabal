@@ -36,18 +36,6 @@ library
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 
-test-suite request
-  build-depends: base >= 4.6,
-                 containers,
-                 text,
-                 QuickCheck,
-                 libstackexchange
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  hs-source-dirs: tests/request
-  ghc-options: -Wall
-               -fno-warn-unused-do-bind
-
 test-suite api
   build-depends: base >= 4.6,
                  doctest >= 0.8,
