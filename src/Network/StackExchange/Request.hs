@@ -245,18 +245,19 @@ code c = wrap $ __query %~ M.insert "code" c
 {-# INLINE code #-}
 
 
--- | Wrapping to interesting Monoid (R -> R) instance
+-- | Wrapping to interesting 'Monoid' ('R' -> 'R') instance
 wrap ∷ (R a n r → R a n r) → Request a n r
 wrap = Dual . Endo
 
 
--- | Unwrapping from interesting Monoid (R -> R) instance
+-- | Unwrapping from interesting 'Monoid' ('R' -> 'R') instance
 unwrap ∷ Request a n r → (R a n r → R a n r)
 unwrap = appEndo . getDual
 
 
--- | Render R as URI string for networking
-render ∷ R a n r → String
-render R {_host, _path, _query} = T.unpack $ mconcat [_host, "/", _path, "?", argie _query]
+-- | Render 'R' as URI string for networking
+render ∷ Request a n r → String
+render (($ def) . unwrap → R {_host, _path, _query}) =
+  T.unpack $ mconcat [_host, "/", _path, "?", argie _query]
  where
   argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty

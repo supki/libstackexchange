@@ -3,7 +3,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
-{-# LANGUAGE ViewPatterns #-}
 -- | Get response from Request and retrieve data from it
 module Network.StackExchange.Response
   ( -- * Schedule request
@@ -38,7 +37,8 @@ instance Exception SEException
 
 -- | Send Request and parse response
 askSE ∷ Request Ready n r → IO r
-askSE (($ def) . unwrap → q@R {_method, _parse}) = do
+askSE q = do
+  let R {_method, _parse} = unwrap q def
   r ← C.withManager $ \m → C.parseUrl (render q) >>= \url →
     C.responseBody <$> C.httpLbs (url {C.method = toStrict $ encodeUtf8 _method}) m
   case _parse of

@@ -12,7 +12,6 @@ import Control.Applicative ((<$>), (*>))
 import Control.Exception (throw)
 import Data.Monoid ((<>), mconcat)
 
-import           Data.Default (def)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Encoding (decodeUtf8)
@@ -23,9 +22,8 @@ import Network.StackExchange.Request
 
 
 -- | Construct URI at which user should approve app
-explicitUserPermission ∷ Int → Text → R a n r
-explicitUserPermission c r =
-  unwrap (userPermission c r <> host "https://stackexchange.com/oauth") def
+explicitUserPermission ∷ Int → Text → Request a n r
+explicitUserPermission c r = userPermission c r <> host "https://stackexchange.com/oauth"
 
 
 -- | Request access_token from StackExchange
@@ -49,9 +47,8 @@ explicitAccessToken c s c' r = mconcat
 
 
 -- | Construct URI at which user should approve app
-implicitUserPermission ∷ Int → Text → R a n r
-implicitUserPermission c r =
-  unwrap (userPermission c r <> host "https://stackexchange.com/oauth/dialog") def
+implicitUserPermission ∷ Int → Text → Request a n r
+implicitUserPermission c r = userPermission c r <> host "https://stackexchange.com/oauth/dialog"
 
 
 userPermission ∷ Int → Text → Request a n r
