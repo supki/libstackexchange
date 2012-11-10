@@ -2,8 +2,10 @@
 {-# LANGUAGE UnicodeSyntax #-}
 -- | StackExchange authentication helpers
 module Network.StackExchange.Auth
-  ( -- * Authentication related routines
-    askPermission, accessToken
+  ( -- * Explicit OAuth 2.0 flow
+    explicitUserPermission, explicitAccessToken
+    -- * Implicit OAuth 2.0 flow
+  , implicitUserPermission
   ) where
 
 import Control.Applicative ((<$>), (*>))
@@ -21,13 +23,14 @@ import Network.StackExchange.Request
 
 
 -- | Construct URI at which user should approve app
-askPermission ∷ Int → Text → R a n r
-askPermission c r = unwrap (host "https://stackexchange.com/oauth" <> client c <> redirectURI r) def
+explicitUserPermission ∷ Int → Text → R a n r
+explicitUserPermission c r =
+  unwrap (userPermission c r <> host "https://stackexchange.com/oauth") def
 
 
 -- | Request access_token from StackExchange
-accessToken ∷ Int → Text → Text → Text → Request a n Text
-accessToken c s c' r = mconcat
+explicitAccessToken ∷ Int → Text → Text → Text → Request a n Text
+explicitAccessToken c s c' r = mconcat
   [ host "https://stackexchange.com/oauth/access_token"
   , client c
   , secret s
@@ -43,3 +46,13 @@ accessToken c s c' r = mconcat
 
   parser ∷ P.Parser Text
   parser = P.string "access_token=" *> (T.pack <$> P.manyTill P.anyChar (P.char '&'))
+
+
+-- | Construct URI at which user should approve app
+implicitUserPermission ∷ Int → Text → R a n r
+implicitUserPermission c r =
+  unwrap (userPermission c r <> host "https://stackexchange.com/oauth/dialog") def
+
+
+userPermission ∷ Int → Text → Request a n r
+userPermission c r = client c <> redirectURI r

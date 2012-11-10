@@ -25,10 +25,10 @@ main ∷ IO ()
 main = do
   tokens ← newIORef []
   simpleHTTP nullConf $ msum
-    [ dir "authenticate-me-please" $ seeOther (render $ askPermission cID rURI) ""
+    [ dir "authenticate-me-please" $ seeOther (render $ explicitUserPermission cID rURI) ""
     , dir "save-token" $ do
         c ← lookText "code"
-        liftIO $ askSE (accessToken cID cSecret c rURI) >>= modifyIORef' tokens . (:)
+        liftIO $ askSE (explicitAccessToken cID cSecret c rURI) >>= modifyIORef' tokens . (:)
         ok "Saved."
     , dir "show-tokens" $ liftIO (readIORef tokens) >>= ok . show
     ]
