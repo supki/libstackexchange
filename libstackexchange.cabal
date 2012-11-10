@@ -1,5 +1,5 @@
 name:          libstackexchange
-version:       0.1.0.0
+version:       0.2.0.0
 synopsis:      StackExchange API interface
 description:   Provides interface for StackExchange v2.1 API
 homepage:      https://github.com/supki/libstackexchange
