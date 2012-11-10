@@ -5,9 +5,11 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
 import Data.Foldable (foldMap)
+import Data.Maybe (fromMaybe)
 import Data.Monoid
 
-import Control.Lens
+import           Control.Lens
+import qualified Data.Aeson.Lens as L
 
 import Network.StackExchange
 
@@ -21,9 +23,9 @@ ask = askSE $ badgesOnUsers [972985] <> site "stackoverflow" <> key "Lhg6xe5d5Bv
 
 
 count ∷ SE Badge → (Sum Int, Sum Int, Sum Int)
-count x = (\l → set l (x ^. int "award_count" . to Sum) mempty) $
-  case x ^. text "rank" of
-    "bronze" → _1
-    "silver" → _2
-    "gold"   → _3
-    _        → error "badge rank isn't bronze/silver/gold"
+count (SE x) = (\l → set l (Just x ^. L.key "award_count" . to (Sum . fromMaybe 0)) mempty) $
+  case Just x ^. L.key "rank" . L.asText of
+    Just "bronze" → _1
+    Just "silver" → _2
+    Just "gold"   → _3
+    _             → error "badge rank isn't bronze/silver/gold"

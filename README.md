@@ -27,8 +27,6 @@ To get response from request, you need to send it to Stack Exchange:
 response = askSE $ questions'
 ```
 
-
-
 ## Authentication
 
 Some API calls require authentication. The main goal is to get `access_token` via quite
@@ -60,18 +58,18 @@ ghci> askSE $ map (fromJSON . unSE) <$> questions <> site "stackoverflow" :: IO 
 [Success (Title "Playing encrypted video"),Success (Title "How do i get a If statment to read a multilined textbox?"), ...]
 ```
 
-For _hardcore_ users familiar with [lens][4], there are convenience
-actions that cover the most common task of getting specific JSON field(s):
+Another way for experienced users familiar with [lens][4] would be [aeson-lens][6] package.
+For the ease of interaction `se` `Iso` is provided:
 
 ```haskell
-qhci> (qs ^.. traverse) ^! traverse . text "title"
+ghci> import qualified Data.Aeson.Lens as L
+ghci> qs ^.. traverse . from se . to Just . L.key "title" . asText
 ["Playing encrypted video", "How do i get a If statment to read a multilined textbox?", ...]
 ```
-
-And if they are not enough, full power of aeson is provided by `aeson` action.
 
  [1]: https://api.stackexchange.com/docs
  [2]: http://hackage.haskell.org/package/aeson
  [3]: https://api.stackexchange.com/docs/authentication
  [4]: http://hackage.haskell.org/package/lens
  [5]: https://github.com/supki/libstackexchange/blob/master/examples/server-side-authentication.hs
+ [6]: http://hackage.haskell.org/package/aeson-lens

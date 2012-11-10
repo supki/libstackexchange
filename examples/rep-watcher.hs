@@ -5,15 +5,17 @@
 {-# LANGUAGE UnicodeSyntax #-}
 
 import Control.Applicative ((<$>))
+import Data.Maybe (catMaybes)
 import Data.Monoid ((<>))
 
-import Control.Lens
+import           Control.Lens
+import qualified Data.Aeson.Lens as L
 
 import Network.StackExchange
 
 
 main ∷ IO ()
-main = askSE req >>= mapM_ print
+main = askSE req >>= mapM_ (print . truncate) . catMaybes
  where
-  req = (\xs → xs ^.. traverse . int "reputation") <$>
+  req = (\xs → xs ^.. traverse . from se . to Just . L.key "reputation" . L.asDouble) <$>
     usersByIds [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("

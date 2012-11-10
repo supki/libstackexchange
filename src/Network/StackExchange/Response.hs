@@ -10,26 +10,20 @@
 module Network.StackExchange.Response
   ( -- * Schedule request
     SEException(..), askSE, render
-    -- * Generalized combinator
-  , aeson
-    -- * Convenience functions
-  , field, array, int, text
+    -- * Iso lens
+  , se
   ) where
 
 import Control.Applicative ((<$>))
 import Control.Exception (Exception, throwIO)
-import Control.Category ((>>>))
-import Control.Monad ((<=<))
 import Data.Monoid (Monoid(..))
 import Data.Typeable (Typeable)
 
-import           Data.ByteString.Lazy (ByteString, toStrict)
 import           Control.Lens
-import           Data.Aeson (FromJSON, (.:), parseJSON)
-import qualified Data.Aeson.Types as A
+import           Data.Aeson (Value)
+import           Data.ByteString.Lazy (ByteString, toStrict)
 import           Data.Default (Default(..))
 import qualified Data.Map as M
-import           Data.Text (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import qualified Network.HTTP.Conduit as C
@@ -65,33 +59,6 @@ render Request {_host, _path, _query} = T.unpack $ mconcat [_host, "/", _path, "
   argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty
 
 
--- | Generalized combinator, useful if full power of Aeson is needed
-aeson ∷ Monad m ⇒ (a → A.Parser b) → Action m a b
-aeson p = act $ A.parse p >>> \case
-  A.Success v → return v
-  A.Error g → fail g
-{-# INLINE aeson #-}
-
-
--- | Select specific field in JSON
-field ∷ (Monad m, FromJSON a) ⇒ Text → Action m (SE x) a
-field x = aeson $ (.: x) <=< parseJSON . unSE
-{-# INLINE field #-}
-
-
--- | Select specific 'Int' field in JSON
-int ∷ Monad m ⇒ Text → Action m (SE x) Int
-int = field
-{-# INLINE int #-}
-
-
--- | Select specific 'Text' field in JSON
-text ∷ Monad m ⇒ Text → Action m (SE x) Text
-text = field
-{-# INLINE text #-}
-
-
--- | Select specific fields of an array in JSON
-array ∷ (Monad m, FromJSON a) ⇒ Text → Action m (SE x) [a]
-array xs = aeson $ mapM (.: xs) <=< parseJSON . unSE
-{-# INLINE array #-}
+-- | Isomorphism lens for the ease of interaction with generic aeson parser lenses
+se ∷ (Functor f, Isomorphic k) ⇒ k (SE a → f (SE a)) (Value → f Value)
+se = iso SE unSE

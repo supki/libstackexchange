@@ -24,6 +24,7 @@ library
                  attoparsec,
                  text,
                  aeson,
+                 aeson-lens,
                  http-conduit,
                  lens >= 3.0.4
   hs-source-dirs: src
@@ -32,22 +33,6 @@ library
                    Network.StackExchange.Auth
                    Network.StackExchange.Request
                    Network.StackExchange.Response
-  ghc-options: -Wall
-               -fno-warn-unused-do-bind
-
-test-suite aeson-lens
-  build-depends: base >= 4.6,
-                 template-haskell,
-                 bytestring,
-                 attoparsec,
-                 aeson,
-                 lens,
-                 HUnit,
-                 libstackexchange
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  hs-source-dirs: tests/aeson-lens
-  other-modules: TH
   ghc-options: -Wall
                -fno-warn-unused-do-bind
 
@@ -80,6 +65,7 @@ executable rep-watcher
     buildable: False
   build-depends: base >= 4.6,
                  lens,
+                 aeson-lens,
                  libstackexchange
   main-is: examples/rep-watcher.hs
 
@@ -88,6 +74,7 @@ executable badges-watcher
     buildable: False
   build-depends: base >= 4.6,
                  lens,
+                 aeson-lens,
                  libstackexchange
   main-is: examples/badges-watcher.hs
 

@@ -81,12 +81,14 @@ module Network.StackExchange.API
   , writePermissions, meWritePermissions
   ) where
 
+import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
 
 import           Control.Exception (throw)
-import           Control.Lens ((^!), (^..), (^.), traverse)
+import           Control.Lens ((^.))
 import           Data.Aeson (Value)
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Lens as L
 import qualified Data.Attoparsec.Lazy as AP
 import           Data.ByteString.Lazy (ByteString)
 import           Data.Text.Lazy (Text)
@@ -314,7 +316,7 @@ editComment ∷ Int → Text → Request RequireToken "editComment" (SE Comment)
 editComment (toLazyText . decimal → i) body =
   path ("comments/" <> i <> "/edit") <>
   query [("body", body)] <>
-  parse (attoparsec (return . SE) ".comments/{id}/edit:")
+  parse (attoparsec (fmap SE) ".comments/{id}/edit:")
 
 
 -- $commentsByIds
@@ -343,7 +345,7 @@ createComment ∷ Int → Text → Request RequireToken "createComment" (SE Comm
 createComment (toLazyText . decimal → i) body =
   path ("posts/" <> i <> "/comments/add") <>
   query [("body", body)] <>
-  parse (attoparsec (return . SE) ".posts/{id}/comments/add:")
+  parse (attoparsec (fmap SE) ".posts/{id}/comments/add:")
 
 
 -- $commentsOnQuestions
@@ -434,21 +436,13 @@ events = path "events" <> parse (attoparsec items ".events: ")
 -- Filters
 --------------------------
 
--- $createFilter
--- >>> askSE (createFilter [] [] "none" <> k) >>= (^! field "items" . array "filter") :: IO [String]
--- ["none"]
-
 -- | <https://api.stackexchange.com/docs/create-filter>
 createFilter ∷ [Text] → [Text] → Text → Request a "createFilter" (SE Filter)
 createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) base =
   path "filter/create" <>
   query [("include", include), ("exclude", exclude), ("base", base)] <>
-  parse (attoparsec (return . SE) ".filter/create: ")
+  parse (attoparsec (fmap SE) ".filter/create: ")
 
-
--- $readFilter
--- >>> (\x -> (x ^.. traverse) ^! traverse . field "filter" :: [String]) `fmap` askSE (readFilter ["none"] <> k)
--- ["none"]
 
 -- | <https://api.stackexchange.com/docs/read-filter>
 readFilter ∷ [Text] → Request a "readFilter" [SE Filter]
@@ -507,13 +501,9 @@ meUnreadInbox =
 -- Info
 --------------------------
 
--- $info
--- >>> length `fmap` ((^! field "items" . array "total_users") =<< askSE (info <> s <> k) :: IO [Int])
--- 1
-
 -- | <https://api.stackexchange.com/docs/info>
 info ∷ Request a "info" (SE Info)
-info = path "info" <> parse (attoparsec (return . SE) ".info: ")
+info = path "info" <> parse (attoparsec (fmap SE) ".info: ")
 
 
 --------------------------
@@ -808,11 +798,6 @@ meQuestions ∷ Request RequireToken "meQuestions" [SE Question]
 meQuestions = path "me/questions" <> parse (attoparsec items ".me/questions: ")
 
 
--- $featuredQuestionsOnUsers
--- >>> fq <- askSE $ featuredQuestions <> s <> k <> q
--- >>> checkLengthM $ askSE (featuredQuestionsOnUsers (map (\x -> x ^. field "owner" . int "user_id") fq) <> s <> k <> q)
--- True
-
 -- | <https://api.stackexchange.com/docs/featured-questions-on-users>
 featuredQuestionsOnUsers ∷ [Int] → Request a "featuredQuestionsOnUsers" [SE Question]
 featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -824,11 +809,6 @@ featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is)
 meFeaturedQuestions ∷ Request RequireToken "meFeaturedQuestions" [SE Question]
 meFeaturedQuestions = path "me/questions/featured" <> parse (attoparsec items ".me/questions/featured: ")
 
-
--- $noAnswerQuestionsOnUsers
--- >>> naq <- askSE (noAnswerQuestions <> s <> k <> q)
--- >>> checkLengthM $ askSE (noAnswerQuestionsOnUsers (map (\x -> x ^. field "owner" . int "user_id") naq) <> s <> k <> q)
--- True
 
 -- | <https://api.stackexchange.com/docs/no-answer-questions-on-users>
 noAnswerQuestionsOnUsers ∷ [Int] → Request a "noAnswerQuestionsOnUsers" [SE Question]
@@ -843,8 +823,8 @@ meNoAnswerQuestions = path "me/questions/no-answers" <> parse (attoparsec items 
 
 
 -- $unacceptedQuestionsOnUsers
--- >>> (not . null) `fmap` askSE (unacceptedQuestionsOnUsers [570689] <> s <> k <> q)
--- True
+-- >>> null `fmap` askSE (unacceptedQuestionsOnUsers [570689] <> s <> k <> q)
+-- False
 --
 -- | <https://api.stackexchange.com/docs/unaccepted-questions-on-users>
 unacceptedQuestionsOnUsers ∷ [Int] → Request a "unacceptedQuestionsOnUsers" [SE Question]
@@ -857,11 +837,6 @@ unacceptedQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
 meUnacceptedQuestions ∷ Request RequireToken "meUnacceptedQuestions" [SE Question]
 meUnacceptedQuestions = path "me/questions/unaccepted" <> parse (attoparsec items ".me/questions/unaccepted: ")
 
-
--- $unansweredQuestions
--- >>> uaq <- askSE (unansweredQuestions <> s <> k <> q)
--- >>> checkLengthM $ askSE (unansweredQuestionsOnUsers (map (\x -> x ^. field "owner" . int "user_id") uaq) <> s <> k <> q)
--- True
 
 -- | <https://api.stackexchange.com/docs/unanswered-questions-on-users>
 unansweredQuestionsOnUsers ∷ [Int] → Request a "unansweredQuestionsOnUsers" [SE Question]
@@ -1007,11 +982,6 @@ sites = path "sites" <> parse (attoparsec items ".sites: ")
 -- Suggested Edits
 --------------------------
 
--- $postsOnSuggestedEdits
--- >>> se <- askSE (suggestedEdits <> s <> k <> q)
--- >>>  checkLengthM $ askSE (postsOnSuggestedEdits (map (\x -> x ^. int "post_id") se) <> s <> k <> q)
--- True
-
 -- | <https://api.stackexchange.com/docs/posts-on-suggested-edits>
 postsOnSuggestedEdits ∷ [Int] → Request a "postsOnSuggestedEdits" [SE SuggestedEdit]
 postsOnSuggestedEdits (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -1029,22 +999,12 @@ suggestedEdits =
   path "suggested-edits" <> parse (attoparsec items ".suggested-edits: ")
 
 
--- $suggestedEditsByIds
--- >>> se <- askSE (suggestedEdits <> s <> k <> q)
--- >>> checkLengthM $ askSE (suggestedEditsByIds (map (\x -> x ^. int "suggested_edit_id") se) <> s <> k <> q)
--- True
-
 -- | <https://api.stackexchange.com/docs/suggested-edits-by-ids>
 suggestedEditsByIds ∷ [Int] → Request a "suggestedEditsByIds" [SE SuggestedEdit]
 suggestedEditsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("suggested-edits/" <> is ) <>
   parse (attoparsec items ".suggested-edits/{ids}: ")
 
-
--- $suggestedEditsOnUsers
--- >>> se <- askSE (suggestedEdits <> s <> k <> q)
--- >>> checkLengthM $ askSE (suggestedEditsOnUsers (map (\x -> x ^. field "proposing_user" . int "user_id") se) <> s <> k <> q)
--- True
 
 -- | <https://api.stackexchange.com/docs/suggested-edits-on-users>
 suggestedEditsOnUsers ∷ [Int] → Request a "suggestedEditsOnUsers" [SE SuggestedEdit]
@@ -1323,13 +1283,13 @@ meWritePermissions ∷ Request RequireToken "meWritePermissions" [SE WritePermis
 meWritePermissions = path "me/write-permissions" <> parse (attoparsec items ".me/write-permissions: ")
 
 
-attoparsec ∷ (Value → Maybe b) → String → ByteString → b
+attoparsec ∷ (Maybe Value → Maybe b) → String → ByteString → b
 attoparsec f msg request = case AP.eitherResult $ AP.parse A.json request of
-  Right s → case f s of
+  Right s → case f (Just s) of
     Just b → b
     Nothing → throw $ SEException request ("libstackexchange" ++ msg ++ "incorrect JSON content")
   Left e → throw $ SEException request ("libstackexchange" ++ msg ++ e)
 
 
-items ∷ (Functor m, Monad m) ⇒ Value → m [SE a]
-items s = SE s ^! field "items"
+items ∷ Maybe Value → Maybe [SE a]
+items s = map SE <$> (s ^. L.key "items")
