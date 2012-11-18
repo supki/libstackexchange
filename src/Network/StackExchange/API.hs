@@ -85,12 +85,13 @@ import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
 
 import           Control.Exception (throw)
-import           Control.Lens ((^.))
+import           Control.Lens ((^.),(^..), from, to, traverse)
 import           Data.Aeson (Value)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Lens as L
 import qualified Data.Attoparsec.Lazy as AP
 import           Data.ByteString.Lazy (ByteString)
+import           Data.Maybe (catMaybes, isJust)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Builder (toLazyText)
@@ -436,6 +437,10 @@ events = path "events" <> parse (attoparsec items ".events: ")
 -- Filters
 --------------------------
 
+-- $createFilter
+-- >>> (^. from se . to Just . L.key "items" . L.nth 0 . L.key "filter" . L.asText) <$> askSE (createFilter [] [] "none" <> k)
+-- Just "none"
+
 -- | <https://api.stackexchange.com/docs/create-filter>
 createFilter ∷ [Text] → [Text] → Text → Request a "createFilter" (SE Filter)
 createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) base =
@@ -443,6 +448,10 @@ createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) bas
   query [("include", include), ("exclude", exclude), ("base", base)] <>
   parse (attoparsec (fmap SE) ".filter/create: ")
 
+
+-- $readFilter
+-- >>> (^.. traverse . from se . to Just . L.key "filter" . L.asText) <$> askSE (readFilter ["none"] <> k)
+-- [Just "none"]
 
 -- | <https://api.stackexchange.com/docs/read-filter>
 readFilter ∷ [Text] → Request a "readFilter" [SE Filter]
@@ -500,6 +509,10 @@ meUnreadInbox =
 --------------------------
 -- Info
 --------------------------
+
+-- $info
+-- >>> isJust . (^. from se . to Just . L.key "items" . L.nth 0 . L.key "total_users" . L.asDouble) <$> askSE (info <> s <> k)
+-- True
 
 -- | <https://api.stackexchange.com/docs/info>
 info ∷ Request a "info" (SE Info)
@@ -797,6 +810,10 @@ questionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is) =
 meQuestions ∷ Request RequireToken "meQuestions" [SE Question]
 meQuestions = path "me/questions" <> parse (attoparsec items ".me/questions: ")
 
+-- $featuredQuestionsOnUsers
+-- >>> fq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . to Just . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (featuredQuestions <> s <> k <> q)
+-- >>> checkLengthM $ askSE $ featuredQuestionsOnUsers fq <> s <> k <> q
+-- True
 
 -- | <https://api.stackexchange.com/docs/featured-questions-on-users>
 featuredQuestionsOnUsers ∷ [Int] → Request a "featuredQuestionsOnUsers" [SE Question]
@@ -809,6 +826,11 @@ featuredQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → is)
 meFeaturedQuestions ∷ Request RequireToken "meFeaturedQuestions" [SE Question]
 meFeaturedQuestions = path "me/questions/featured" <> parse (attoparsec items ".me/questions/featured: ")
 
+
+-- $noAnswerQuestionsOnUsers
+-- >>> naaq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (noAnswerQuestions <> s <> k <> q)
+-- >>> checkLengthM $ askSE (noAnswerQuestionsOnUsers naaq <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/no-answer-questions-on-users>
 noAnswerQuestionsOnUsers ∷ [Int] → Request a "noAnswerQuestionsOnUsers" [SE Question]
@@ -837,6 +859,11 @@ unacceptedQuestionsOnUsers (T.intercalate ";" . map (toLazyText . decimal) → i
 meUnacceptedQuestions ∷ Request RequireToken "meUnacceptedQuestions" [SE Question]
 meUnacceptedQuestions = path "me/questions/unaccepted" <> parse (attoparsec items ".me/questions/unaccepted: ")
 
+
+-- $unansweredQuestionsOnUsers
+-- >>> uaq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (unansweredQuestions <> s <> k <> q)
+-- >>> checkLengthM $ askSE (unansweredQuestionsOnUsers uaq <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/unanswered-questions-on-users>
 unansweredQuestionsOnUsers ∷ [Int] → Request a "unansweredQuestionsOnUsers" [SE Question]
@@ -982,6 +1009,11 @@ sites = path "sites" <> parse (attoparsec items ".sites: ")
 -- Suggested Edits
 --------------------------
 
+-- $postsOnSuggestedEdits
+-- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "post_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
+-- >>> checkLengthM $ askSE (postsOnSuggestedEdits se' <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/posts-on-suggested-edits>
 postsOnSuggestedEdits ∷ [Int] → Request a "postsOnSuggestedEdits" [SE SuggestedEdit]
 postsOnSuggestedEdits (T.intercalate ";" . map (toLazyText . decimal) → is) =
@@ -999,12 +1031,22 @@ suggestedEdits =
   path "suggested-edits" <> parse (attoparsec items ".suggested-edits: ")
 
 
+-- $suggestedEditsByIds
+-- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "suggested_edit_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
+-- >>> checkLengthM $ askSE (suggestedEditsByIds se' <> s <> k <> q)
+-- True
+
 -- | <https://api.stackexchange.com/docs/suggested-edits-by-ids>
 suggestedEditsByIds ∷ [Int] → Request a "suggestedEditsByIds" [SE SuggestedEdit]
 suggestedEditsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
   path ("suggested-edits/" <> is ) <>
   parse (attoparsec items ".suggested-edits/{ids}: ")
 
+
+-- $suggestedEditsOnUsers
+-- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "proposing_user" . L.key "user_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
+-- >>> checkLengthM $ askSE (suggestedEditsOnUsers se' <> s <> k <> q)
+-- True
 
 -- | <https://api.stackexchange.com/docs/suggested-edits-on-users>
 suggestedEditsOnUsers ∷ [Int] → Request a "suggestedEditsOnUsers" [SE SuggestedEdit]
