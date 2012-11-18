@@ -85,13 +85,12 @@ import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
 
 import           Control.Exception (throw)
-import           Control.Lens ((^.),(^..), from, to, traverse)
+import           Control.Lens ((^.))
 import           Data.Aeson (Value)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Lens as L
 import qualified Data.Attoparsec.Lazy as AP
 import           Data.ByteString.Lazy (ByteString)
-import           Data.Maybe (catMaybes, isJust)
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import           Data.Text.Lazy.Builder (toLazyText)
@@ -101,6 +100,8 @@ import Network.StackExchange.Response
 import Network.StackExchange.Request
 
 -- $setup
+-- >>> import Control.Lens ((^.),(^..), from, to, traverse)
+-- >>> import Data.Maybe (catMaybes, isJust)
 -- >>> let pagesize = 10 :: Int
 -- >>> let checkLengthM f = ((== pagesize) . length) `fmap` f
 -- >>> let k = key "Lhg6xe5d5BvNK*C0S8jijA(("
