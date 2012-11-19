@@ -18,4 +18,4 @@ main ∷ IO ()
 main = reputation <$> askSE req >>= mapM_ (print . truncate) . catMaybes
  where
   req = usersByIds [972985] <> site "stackoverflow" <> key "Lhg6xe5d5BvNK*C0S8jijA(("
-  reputation xs = xs ^.. traverse . from se . to Just . L.key "reputation" . L.asDouble
+  reputation xs = xs ^.. traverse . from se . L.key "reputation" . L.asDouble

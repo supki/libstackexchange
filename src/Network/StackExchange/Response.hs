@@ -13,10 +13,11 @@ module Network.StackExchange.Response
 
 import Control.Applicative ((<$>))
 import Control.Exception (Exception, throwIO)
+import Data.Maybe (fromMaybe)
 import Data.Typeable (Typeable)
 
 import           Control.Lens
-import           Data.Aeson (Value)
+import           Data.Aeson (Value(..))
 import           Data.ByteString.Lazy (ByteString, toStrict)
 import           Data.Default (Default(..))
 import           Data.Text.Lazy.Encoding (encodeUtf8)
@@ -47,6 +48,10 @@ askSE q = do
       SEException r "libstackexchange.askSE: no parsing function registered"
 
 
--- | Isomorphism lens for the ease of interaction with generic aeson parser lenses
-se ∷ (Functor f, Isomorphic k) ⇒ k (SE a → f (SE a)) (Value → f Value)
-se = iso SE unSE
+-- | Isomorphism for the ease of interaction with aeson-lens
+se ∷ (Functor f, Isomorphic k) ⇒ k (SE a → f (SE a)) (Maybe Value → f (Maybe Value))
+se = iso to' from'
+ where
+  to' = SE . fromMaybe Null
+  from' (SE Null) = Nothing
+  from' (SE x) = Just x

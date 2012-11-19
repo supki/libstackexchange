@@ -439,7 +439,7 @@ events = path "events" <> parse (attoparsec items ".events: ")
 --------------------------
 
 -- $createFilter
--- >>> (^. from se . to Just . L.key "items" . L.nth 0 . L.key "filter" . L.asText) <$> askSE (createFilter [] [] "none" <> k)
+-- >>> (^. from se . L.key "items" . L.nth 0 . L.key "filter" . L.asText) <$> askSE (createFilter [] [] "none" <> k)
 -- Just "none"
 
 -- | <https://api.stackexchange.com/docs/create-filter>
@@ -451,7 +451,7 @@ createFilter (T.intercalate ";" → include) (T.intercalate ";" → exclude) bas
 
 
 -- $readFilter
--- >>> (^.. traverse . from se . to Just . L.key "filter" . L.asText) <$> askSE (readFilter ["none"] <> k)
+-- >>> (^.. traverse . from se . L.key "filter" . L.asText) <$> askSE (readFilter ["none"] <> k)
 -- [Just "none"]
 
 -- | <https://api.stackexchange.com/docs/read-filter>
@@ -512,7 +512,7 @@ meUnreadInbox =
 --------------------------
 
 -- $info
--- >>> isJust . (^. from se . to Just . L.key "items" . L.nth 0 . L.key "total_users" . L.asDouble) <$> askSE (info <> s <> k)
+-- >>> isJust . (^. from se . L.key "items" . L.nth 0 . L.key "total_users" . L.asDouble) <$> askSE (info <> s <> k)
 -- True
 
 -- | <https://api.stackexchange.com/docs/info>
@@ -812,7 +812,7 @@ meQuestions ∷ Request RequireToken "meQuestions" [SE Question]
 meQuestions = path "me/questions" <> parse (attoparsec items ".me/questions: ")
 
 -- $featuredQuestionsOnUsers
--- >>> fq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . to Just . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (featuredQuestions <> s <> k <> q)
+-- >>> fq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (featuredQuestions <> s <> k <> q)
 -- >>> checkLengthM $ askSE $ featuredQuestionsOnUsers fq <> s <> k <> q
 -- True
 
@@ -829,7 +829,7 @@ meFeaturedQuestions = path "me/questions/featured" <> parse (attoparsec items ".
 
 
 -- $noAnswerQuestionsOnUsers
--- >>> naaq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (noAnswerQuestions <> s <> k <> q)
+-- >>> naaq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (noAnswerQuestions <> s <> k <> q)
 -- >>> checkLengthM $ askSE (noAnswerQuestionsOnUsers naaq <> s <> k <> q)
 -- True
 
@@ -862,7 +862,7 @@ meUnacceptedQuestions = path "me/questions/unaccepted" <> parse (attoparsec item
 
 
 -- $unansweredQuestionsOnUsers
--- >>> uaq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (unansweredQuestions <> s <> k <> q)
+-- >>> uaq <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . L.key "owner" . L.key "user_id" . L.asDouble) <$> askSE (unansweredQuestions <> s <> k <> q)
 -- >>> checkLengthM $ askSE (unansweredQuestionsOnUsers uaq <> s <> k <> q)
 -- True
 
@@ -1011,7 +1011,7 @@ sites = path "sites" <> parse (attoparsec items ".sites: ")
 --------------------------
 
 -- $postsOnSuggestedEdits
--- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "post_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
+-- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . L.key "post_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
 -- >>> checkLengthM $ askSE (postsOnSuggestedEdits se' <> s <> k <> q)
 -- True
 
@@ -1033,7 +1033,7 @@ suggestedEdits =
 
 
 -- $suggestedEditsByIds
--- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "suggested_edit_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
+-- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . L.key "suggested_edit_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
 -- >>> checkLengthM $ askSE (suggestedEditsByIds se' <> s <> k <> q)
 -- True
 
@@ -1045,7 +1045,7 @@ suggestedEditsByIds (T.intercalate ";" . map (toLazyText . decimal) → is) =
 
 
 -- $suggestedEditsOnUsers
--- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se. to Just . L.key "proposing_user" . L.key "user_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
+-- >>> se' <- (map truncate :: [Double] -> [Int]) . catMaybes . (^.. traverse . from se . L.key "proposing_user" . L.key "user_id" . L.asDouble) <$> askSE (suggestedEdits <> s <> k <> q)
 -- >>> checkLengthM $ askSE (suggestedEditsOnUsers se' <> s <> k <> q)
 -- True
 

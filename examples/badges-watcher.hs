@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE ViewPatterns #-}
 
 import Data.Foldable (foldMap)
 import Data.Maybe (fromMaybe)
@@ -23,8 +24,8 @@ ask = askSE $ badgesOnUsers [972985] <> site "stackoverflow" <> key "Lhg6xe5d5Bv
 
 
 count ∷ SE Badge → (Sum Int, Sum Int, Sum Int)
-count (SE x) = (\l → set l (Just x ^. L.key "award_count" . to (Sum . fromMaybe 0)) mempty) $
-  case Just x ^. L.key "rank" . L.asText of
+count (view (from se) → x) = (\l → set l (x ^. L.key "award_count" . to (Sum . fromMaybe 0)) mempty) $
+  case x ^. L.key "rank" . L.asText of
     Just "bronze" → _1
     Just "silver" → _2
     Just "gold"   → _3
