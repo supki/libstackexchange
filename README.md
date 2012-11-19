@@ -43,7 +43,7 @@ StackExchange responses are, basically, wrapped [aeson][2] data structure, so yo
 access data via ordinary aeson parsers:
 
 ```haskell
-ghci> +m Control.Applicative Data.Aeson Data.Aeson.Types Data.Monoid Data.Text
+ghci> :m + Control.Applicative Data.Aeson Data.Aeson.Types Data.Monoid Data.Text
 ghci> data Title = Title Text deriving Show
 ghci> instance FromJSON Title where parseJSON o = Title <$> (parseJSON o >>= (.: "title"))
 ghci> qs <- askSE $ questions <> site "stackoverflow"
