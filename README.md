@@ -56,7 +56,7 @@ For the ease of interaction `se` `Iso` is provided:
 
 ```haskell
 ghci> import qualified Data.Aeson.Lens as L
-ghci> qs ^.. traverse . from se . to Just . L.key "title" . asText
+ghci> qs ^.. traverse . from se . L.key "title" . L.asText
 ["Playing encrypted video", "How do i get a If statment to read a multilined textbox?", ...]
 ```
 
