@@ -24,7 +24,6 @@ library
                  attoparsec,
                  text,
                  aeson,
-                 aeson-lens,
                  http-conduit,
                  lens >= 3.0.4
   hs-source-dirs: src

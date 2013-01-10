@@ -26,7 +26,7 @@ import GHC.TypeLits (Symbol)
 import Prelude hiding (filter)
 import Unsafe.Coerce (unsafeCoerce)
 
-import           Control.Lens hiding (query)
+import           Control.Lens
 import           Data.ByteString.Lazy (ByteString)
 import           Data.Aeson (FromJSON)
 import           Data.Aeson.Types (Value)

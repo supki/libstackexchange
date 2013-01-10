@@ -81,14 +81,12 @@ module Network.StackExchange.API
   , writePermissions, meWritePermissions
   ) where
 
-import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
 
 import           Control.Exception (throw)
-import           Control.Lens ((^.))
-import           Data.Aeson (Value)
+import           Data.Aeson ((.:), Value)
 import qualified Data.Aeson as A
-import qualified Data.Aeson.Lens as L
+import qualified Data.Aeson.Types as A
 import qualified Data.Attoparsec.Lazy as AP
 import           Data.ByteString.Lazy (ByteString)
 import           Data.Text.Lazy (Text)
@@ -100,8 +98,10 @@ import Network.StackExchange.Response
 import Network.StackExchange.Request
 
 -- $setup
--- >>> import Control.Lens ((^.),(^..), from, to, traverse)
--- >>> import Data.Maybe (catMaybes, isJust)
+-- >>> import           Control.Applicative
+-- >>> import           Control.Lens
+-- >>> import qualified Data.Aeson.Lens as L
+-- >>> import           Data.Maybe (catMaybes, isJust)
 -- >>> let pagesize = 10 :: Int
 -- >>> let checkLengthM f = ((== pagesize) . length) `fmap` f
 -- >>> let k = key "Lhg6xe5d5BvNK*C0S8jijA(("
@@ -1335,4 +1335,4 @@ attoparsec f msg request = case AP.eitherResult $ AP.parse A.json request of
 
 
 items ∷ Maybe Value → Maybe [SE a]
-items s = map SE <$> (s ^. L.key "items")
+items s = fmap (map SE) . A.parseMaybe (\o -> A.parseJSON o >>= (.: "items")) =<< s
