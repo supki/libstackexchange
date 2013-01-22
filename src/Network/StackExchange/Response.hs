@@ -16,7 +16,7 @@ import Control.Exception (Exception, throwIO)
 import Data.Maybe (fromMaybe)
 import Data.Typeable (Typeable)
 
-import           Control.Lens
+import           Data.Profunctor
 import           Data.Aeson (Value(..))
 import           Data.ByteString.Lazy (ByteString, toStrict)
 import           Data.Default (Default(..))
@@ -49,9 +49,10 @@ askSE q = do
 
 
 -- | Isomorphism for the ease of interaction with aeson-lens
-se ∷ (Functor f, Isomorphic k) ⇒ k (SE a → f (SE a)) (Maybe Value → f (Maybe Value))
-se = iso to' from'
+se :: (Functor f, Profunctor p) => p (SE a) (f (SE t)) -> p (Maybe Value) (f (Maybe Value))
+se = dimap sa (fmap bt)
  where
-  to' = SE . fromMaybe Null
-  from' (SE Null) = Nothing
-  from' (SE x) = Just x
+  sa = SE . fromMaybe Null
+
+  bt (SE Null) = Nothing
+  bt (SE x) = Just x

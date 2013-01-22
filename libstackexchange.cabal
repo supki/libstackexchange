@@ -25,7 +25,7 @@ library
                  text,
                  aeson,
                  http-conduit,
-                 lens >= 3.0.4
+                 profunctors
   hs-source-dirs: src
   exposed-modules: Network.StackExchange
                    Network.StackExchange.API

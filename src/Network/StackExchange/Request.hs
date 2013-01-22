@@ -4,7 +4,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE ViewPatterns #-}
 -- | StackExchange API request manipulation routines
@@ -26,7 +25,6 @@ import GHC.TypeLits (Symbol)
 import Prelude hiding (filter)
 import Unsafe.Coerce (unsafeCoerce)
 
-import           Control.Lens
 import           Data.ByteString.Lazy (ByteString)
 import           Data.Aeson (FromJSON)
 import           Data.Aeson.Types (Value)
@@ -99,16 +97,6 @@ data R (a ∷ Auth) (n ∷ Symbol) r = R
   }
 
 
-makeLensesFor
-  [ ("_host", "__host")
-  , ("_path", "__path")
-  , ("_method", "__method")
-  , ("_query", "__query")
-  , ("_parse", "__parse")
-  ]
-  ''R
-
-
 type Request a n r = Dual (Endo (R a n r))
 
 
@@ -128,7 +116,7 @@ instance Default (R a n r) where
 --
 -- Primarily used in Auth, not intended for usage by library user
 host ∷ Text → Request a n r
-host p = wrap $ __host .~ p
+host h = wrap $ \r -> r { _host = h }
 {-# INLINE host #-}
 
 
@@ -136,7 +124,7 @@ host p = wrap $ __host .~ p
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
 path ∷ Text → Request a n r
-path p = wrap $ __path .~ p
+path p = wrap $ \r -> r { _path = p }
 {-# INLINE path #-}
 
 
@@ -144,7 +132,7 @@ path p = wrap $ __path .~ p
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
 method ∷ Text → Request a n r
-method m = wrap $ __method .~ m
+method m = wrap $ \r -> r { _method = m }
 {-# INLINE method #-}
 
 
@@ -152,7 +140,7 @@ method m = wrap $ __method .~ m
 --
 -- Primarily used in API call wrappers, not intended for usage by library user
 parse ∷ (ByteString → r) → Request a n r
-parse f = wrap $ __parse ?~ f
+parse f = wrap $ \r -> r { _parse = Just f }
 {-# INLINE parse #-}
 
 
@@ -164,37 +152,37 @@ parse f = wrap $ __parse ?~ f
 --
 -- Takes a list of (key, value) parameters such as @[(\"order\", \"asc\"), (\"sort\", \"rank\")]@
 query ∷ [(Text, Text)] → Request a n r
-query q = wrap $ __query %~ (M.fromList q <>)
+query q = wrap $ __query (M.fromList q <>)
 {-# INLINE query #-}
 
 
 -- | Convert token requiring Request into ready one
 token ∷ Text → Request RequireToken n r → Request Ready n r
-token t = unsafeCoerce . mappend (wrap (__query %~ M.insert "access_token" t))
+token t = unsafeCoerce . mappend (wrap (__query (M.insert "access_token" t)))
 {-# INLINE token #-}
 
 
 -- | Request defining only App key
 key ∷ Text → Request a n r
-key s = wrap $ __query %~ M.insert "key" s
+key k = wrap $ __query (M.insert "key" k)
 {-# INLINE key #-}
 
 
 -- | Request defining only API call site query parameter
 site ∷ Text → Request a n r
-site s = wrap $ __query %~ M.insert "site" s
+site s = wrap $ __query (M.insert "site" s)
 {-# INLINE site #-}
 
 
 -- | Request defining only API call filter query parameter
 filter ∷ Text → Request a n r
-filter f = wrap $ __query %~ M.insert "filter" f
+filter f = wrap $ __query (M.insert "filter" f)
 {-# INLINE filter #-}
 
 
 -- | Request defining only API call state query parameter
 state ∷ Text → Request a n r
-state s = wrap $ __query %~ M.insert "state" s
+state s = wrap $ __query (M.insert "state" s)
 {-# INLINE state #-}
 
 
@@ -204,7 +192,7 @@ data Scope = ReadInbox | NoExpiry | WriteAccess | PrivateInfo
 
 -- | Request defining only API call scope query parameter
 scope ∷ [Scope] → Request a n r
-scope ss = wrap $ __query %~ (M.insert "scope" $ scopie ss)
+scope ss = wrap $ __query (M.insert "scope" $ scopie ss)
  where
   scopie xs = T.intercalate "," . flip map xs $ \case
     ReadInbox   → "read_inbox"
@@ -217,7 +205,7 @@ scope ss = wrap $ __query %~ (M.insert "scope" $ scopie ss)
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 client ∷ Int → Request a n r
-client (toLazyText . decimal → c) = wrap $ __query %~ M.insert "client_id" c
+client (toLazyText . decimal → c) = wrap $ __query (M.insert "client_id" c)
 {-# INLINE client #-}
 
 
@@ -225,7 +213,7 @@ client (toLazyText . decimal → c) = wrap $ __query %~ M.insert "client_id" c
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 redirectURI ∷ Text → Request a n r
-redirectURI r = wrap $ __query %~ M.insert "redirect_uri" r
+redirectURI r = wrap $ __query (M.insert "redirect_uri" r)
 {-# INLINE redirectURI #-}
 
 
@@ -233,7 +221,7 @@ redirectURI r = wrap $ __query %~ M.insert "redirect_uri" r
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 secret ∷ Text → Request a n r
-secret c = wrap $ __query %~ M.insert "client_secret" c
+secret c = wrap $ __query (M.insert "client_secret" c)
 {-# INLINE secret #-}
 
 
@@ -241,7 +229,7 @@ secret c = wrap $ __query %~ M.insert "client_secret" c
 --
 -- Primarily used in Authentication API call wrappers, not intended for usage by library user
 code ∷ Text → Request a n r
-code c = wrap $ __query %~ M.insert "code" c
+code c = wrap $ __query (M.insert "code" c)
 {-# INLINE code #-}
 
 
@@ -261,3 +249,7 @@ render (($ def) . unwrap → R {_host, _path, _query}) =
   T.unpack $ mconcat [_host, "/", _path, "?", argie _query]
  where
   argie = T.intercalate "&" . M.foldrWithKey (\k v m → T.concat [k, "=", v] : m) mempty
+
+
+__query :: (Map Text Text -> Map Text Text) -> R a n r -> R a n r
+__query f = \r -> r { _query  = f (_query r) }
