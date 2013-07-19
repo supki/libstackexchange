@@ -1,4 +1,6 @@
-#libstackexchange
+# libstackexchange
+
+[![Build Status](https://drone.io/github.com/supki/libstackexchange/status.png)](https://drone.io/github.com/supki/libstackexchange/latest)
 
 Haskell interface to [Stack Exchange API v2.1][1]
 
