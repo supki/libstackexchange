@@ -1,5 +1,5 @@
 # libstackexchange
-[![Hackage](https://budueba.com/hackage/libstackexchange)](http://hackage.haskell.org/package/libstackexchange)
+[![Hackage](https://budueba.com/hackage/libstackexchange)](https://hackage.haskell.org/package/libstackexchange)
 [![Build Status](https://drone.io/github.com/supki/libstackexchange/status.png)](https://drone.io/github.com/supki/libstackexchange/latest)
 
 Haskell interface to [Stack Exchange API v2.1][1]
@@ -63,8 +63,8 @@ ghci> qs ^.. traverse . from se . L.key "title" . L.asText
 ```
 
  [1]: https://api.stackexchange.com/docs
- [2]: http://hackage.haskell.org/package/aeson
+ [2]: https://hackage.haskell.org/package/aeson
  [3]: https://api.stackexchange.com/docs/authentication
- [4]: http://hackage.haskell.org/package/lens
+ [4]: https://hackage.haskell.org/package/lens
  [5]: https://github.com/supki/libstackexchange/blob/master/examples/server-side-authentication.hs
- [6]: http://hackage.haskell.org/package/aeson-lens
+ [6]: https://hackage.haskell.org/package/aeson-lens
