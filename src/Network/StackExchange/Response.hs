@@ -37,11 +37,12 @@ instance Exception SEException
 
 
 -- | Send Request and parse response
-askSE ∷ Request Ready n r → IO r
+askSE ∷ Request 'Ready n r → IO r
 askSE q = do
   let R {_method, _parse} = unwrap q def
-  r ← C.withManager $ \m → C.parseUrl (render q) >>= \url →
-    C.responseBody <$> C.httpLbs (url {C.method = toStrict $ encodeUtf8 _method}) m
+  m ← C.newManager C.tlsManagerSettings
+  url ← C.parseUrlThrow (render q)
+  r ← C.responseBody <$> C.httpLbs (url {C.method = toStrict $ encodeUtf8 _method}) m
   case _parse of
     Just f → return $ f r
     Nothing → throwIO $

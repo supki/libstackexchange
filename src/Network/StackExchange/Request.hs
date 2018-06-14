@@ -157,7 +157,7 @@ query q = wrap $ __query (M.fromList q <>)
 
 
 -- | Convert token requiring Request into ready one
-token ∷ Text → Request RequireToken n r → Request Ready n r
+token ∷ Text → Request 'RequireToken n r → Request 'Ready n r
 token t = unsafeCoerce . mappend (wrap (__query (M.insert "access_token" t)))
 {-# INLINE token #-}
 
